@@ -1,0 +1,6 @@
+rootProject.name = 'propertyrentalplatform-microservices'
+include 'api-gateway'
+include 'property-service'
+include 'owners-service'
+include 'tenant-service'
+include 'rental-service'
