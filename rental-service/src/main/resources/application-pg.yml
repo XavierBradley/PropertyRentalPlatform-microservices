@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:rental_db}
+    username: ${POSTGRES_USER:rental}
+    password: ${POSTGRES_PASSWORD:rental}
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
