@@ -33,6 +33,8 @@ public class RentalExceptionHandler {
 
 
     private ResponseEntity<ApiErrorResponse> build(HttpStatus status, Exception ex, HttpServletRequest req) {
+        ex.printStackTrace(); // 👈 THIS IS THE KEY
+
         var body = new ApiErrorResponse(
                 Instant.now(),
                 status.value(),

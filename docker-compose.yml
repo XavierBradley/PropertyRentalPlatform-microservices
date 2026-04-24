@@ -110,9 +110,9 @@ services:
       SERVER_PORT: 8080
     depends_on:
       - rental-db
-      - property-db
-      - owners-db
-      - tenant-db
+      - property-service
+      - owners-service
+      - tenant-service
     ports:
       - "8084:8080"
 
