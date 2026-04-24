@@ -21,7 +21,7 @@ public class TenantExceptionHandler {
             DuplicateTenantException.class,
             TooLowCreditScoreException.class
     })
-    public ResponseEntity<ApiErrorResponse> conflict(DuplicateTenantException ex, HttpServletRequest req) {
+    public ResponseEntity<ApiErrorResponse> conflict(RuntimeException ex, HttpServletRequest req) {
         return build(HttpStatus.CONFLICT, ex, req);
     }
 

@@ -2,6 +2,7 @@ package com.champsoft.propertyrentalplatform.tenant.application.service;
 
 import com.champsoft.propertyrentalplatform.tenant.application.exception.*;
 import com.champsoft.propertyrentalplatform.tenant.application.port.out.TenantRepositoryPort;
+import com.champsoft.propertyrentalplatform.tenant.domain.exception.InvalidTenantNameException;
 import com.champsoft.propertyrentalplatform.tenant.domain.model.*;
 
 import org.springframework.stereotype.Service;
@@ -25,6 +26,12 @@ public class TenantCrudService {
         if (repo.existsByName(tenant.name())) {
             throw new DuplicateTenantException("Tenant already exists by name: " + tenant.name());
         }
+
+        if (!name.matches("[A-Za-z -]+")) {
+            throw new InvalidTenantNameException("Name must contain only letters");
+        }
+        String n = name.trim();
+        if (n.length() < 2 || n.length() > 100) throw new InvalidTenantNameException("Tenant name length must be 2..100");
         return repo.save(tenant);
     }
 

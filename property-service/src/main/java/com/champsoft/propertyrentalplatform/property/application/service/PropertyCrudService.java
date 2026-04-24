@@ -52,7 +52,6 @@ public class PropertyCrudService {
         var property = getById(id);
 
         var a = new Address(address);
-        if (repo.existsByAddress(a)) throw new DuplicateAddressException("Another property already has this same address: " + a.value());
 
         property.update(new PropertyTax(tax), a);
         return repo.save(property);

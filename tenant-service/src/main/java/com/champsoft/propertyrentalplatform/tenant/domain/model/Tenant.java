@@ -35,7 +35,10 @@ public class Tenant {
     public boolean isEligibleForRegistration() { return status == TenantStatus.ACTIVE; }
 
     private void setName(String name) {
-        if (name == null) throw new InvalidTenantNameException("Tenant name is required");
+        if (!name.matches("[A-Za-z -]+")) {
+            throw new InvalidTenantNameException("Name must contain only letters");
+        }
+
         String v = name.trim();
         if (v.length() < 2 || v.length() > 100) throw new InvalidTenantNameException("Tenant name length must be 2..100");
         this.name = v;
