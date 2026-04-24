@@ -1,0 +1,10 @@
+services:
+
+  property:
+    base-url: http://property-service:8080
+
+  owners:
+    base-url: http://owners-service:8080
+
+  tenant:
+    base-url: http://tenants-service:8080

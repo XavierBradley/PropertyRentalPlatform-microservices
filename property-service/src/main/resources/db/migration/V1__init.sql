@@ -3,7 +3,7 @@
    ========================= */
 
 CREATE TABLE IF NOT EXISTS properties (
-    id          VARCHAR(250) PRIMARY KEY,
+    id          UUID PRIMARY KEY,
     tax         DOUBLE NOT NULL,
     address     VARCHAR(200) NOT NULL,
     status      VARCHAR(20) NOT NULL

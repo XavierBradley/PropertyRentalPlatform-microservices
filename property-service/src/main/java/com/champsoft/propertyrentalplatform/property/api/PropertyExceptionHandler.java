@@ -2,7 +2,7 @@ package com.champsoft.propertyrentalplatform.property.api;
 
 import com.champsoft.propertyrentalplatform.property.application.exception.*;
 import com.champsoft.propertyrentalplatform.property.domain.exception.*;
-import com.champsoft.propertyrentalplatform.shared.web.ApiErrorResponse;
+import com.champsoft.propertyrentalplatform.property.web.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;

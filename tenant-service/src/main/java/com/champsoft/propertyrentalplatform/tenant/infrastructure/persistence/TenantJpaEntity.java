@@ -3,11 +3,13 @@ package com.champsoft.propertyrentalplatform.tenant.infrastructure.persistence;
 import com.champsoft.propertyrentalplatform.tenant.domain.model.CreditScore;
 import jakarta.persistence.*;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "tenants")
 public class TenantJpaEntity {
     @Id
-    public String id;
+    public UUID id;
 
     @Column(nullable = false)
     public String name;

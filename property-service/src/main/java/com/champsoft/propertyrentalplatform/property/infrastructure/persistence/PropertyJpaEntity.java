@@ -6,11 +6,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "properties")
 public class PropertyJpaEntity {
     @Id
-    public String id;
+    public UUID id;
 
     @Column(name = "tax", nullable = false)
     public double tax;

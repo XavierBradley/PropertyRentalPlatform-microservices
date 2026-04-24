@@ -2,7 +2,7 @@ package com.champsoft.propertyrentalplatform.rental.api;
 
 import com.champsoft.propertyrentalplatform.rental.application.exception.*;
 import com.champsoft.propertyrentalplatform.rental.domain.exception.*;
-import com.champsoft.propertyrentalplatform.shared.web.ApiErrorResponse;
+import com.champsoft.propertyrentalplatform.rental.web.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -31,14 +31,6 @@ public class RentalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, ex, req);
     }
 
-    @ExceptionHandler({
-            com.champsoft.propertyrentalplatform.modules.property.application.exception.PropertyNotFoundException.class,
-            com.champsoft.propertyrentalplatform.modules.owners.application.exception.OwnerNotFoundException.class,
-            com.champsoft.propertyrentalplatform.modules.tenant.application.exception.TenantNotFoundException.class
-    })
-    public ResponseEntity<ApiErrorResponse> notFound(RuntimeException ex, HttpServletRequest req) {
-        return build(HttpStatus.NOT_FOUND, ex, req);
-    }
 
     private ResponseEntity<ApiErrorResponse> build(HttpStatus status, Exception ex, HttpServletRequest req) {
         var body = new ApiErrorResponse(

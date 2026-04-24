@@ -2,11 +2,13 @@ package com.champsoft.propertyrentalplatform.owners.infrastructure.persistence;
 
 import jakarta.persistence.*;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "owners")
 public class OwnerJpaEntity {
     @Id
-    public String id;
+    public UUID id;
 
     @Column(name = "full_name", nullable = false)
     public String fullName;

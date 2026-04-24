@@ -4,7 +4,7 @@
 
 
 CREATE TABLE IF NOT EXISTS tenants (
-    id              VARCHAR(250) PRIMARY KEY,
+    id              UUID PRIMARY KEY,
     name            VARCHAR(100) NOT NULL,
     score           INT NOT NULL,
 

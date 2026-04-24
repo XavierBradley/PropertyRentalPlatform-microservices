@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 public class JpaOwnerRepositoryAdapter implements OwnerRepositoryPort {
@@ -42,7 +43,7 @@ public class JpaOwnerRepositoryAdapter implements OwnerRepositoryPort {
 
     private OwnerJpaEntity toEntity(Owner o) {
         var e = new OwnerJpaEntity();
-        e.id = o.id().value();
+        e.id = UUID.fromString(o.id().value());
         e.fullName = o.fullName().value();
         e.address = o.address().value();
         e.status = o.status().name();
@@ -51,7 +52,7 @@ public class JpaOwnerRepositoryAdapter implements OwnerRepositoryPort {
 
     private Owner toDomain(OwnerJpaEntity e) {
         var owner = new Owner(
-                OwnerId.of(e.id),
+                OwnerId.of(String.valueOf(e.id)),
                 new FullName(e.fullName),
                 new Address(e.address)
         );

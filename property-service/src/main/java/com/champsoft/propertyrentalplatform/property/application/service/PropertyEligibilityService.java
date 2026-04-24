@@ -16,9 +16,9 @@ public class PropertyEligibilityService {
     }
 
     @Transactional(readOnly = true)
-    public boolean isEligible(String vehicleId) {
-        return repo.findById(PropertyId.of(vehicleId))
+    public boolean isEligible(String propertyId) {
+        return repo.findById(PropertyId.of(propertyId))
                 .map(v -> v.isEligibleToBeRented())
-                .orElseThrow(() -> new PropertyNotFoundException("Vehicle not found: " + vehicleId));
+                .orElseThrow(() -> new PropertyNotFoundException("Property not found: " + propertyId));
     }
 }

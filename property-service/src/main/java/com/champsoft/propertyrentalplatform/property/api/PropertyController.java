@@ -4,6 +4,7 @@ import com.champsoft.propertyrentalplatform.property.api.dto.CreatePropertyReque
 import com.champsoft.propertyrentalplatform.property.api.dto.UpdatePropertyRequest;
 import com.champsoft.propertyrentalplatform.property.api.mapper.PropertyApiMapper;
 import com.champsoft.propertyrentalplatform.property.application.service.PropertyCrudService;
+import com.champsoft.propertyrentalplatform.property.application.service.PropertyEligibilityService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,10 +16,13 @@ import java.util.List;
 public class PropertyController {
 
     private final PropertyCrudService service;
+    private final PropertyEligibilityService eligibilityService;
 
-    public PropertyController(PropertyCrudService service) {
+    public PropertyController(PropertyCrudService service, PropertyEligibilityService eligibilityService) {
         this.service = service;
+        this.eligibilityService = eligibilityService;
     }
+
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody @Valid CreatePropertyRequest req) {
@@ -53,5 +57,10 @@ public class PropertyController {
     public ResponseEntity<?> delete(@PathVariable String id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/eligibility")
+    public ResponseEntity<Boolean> isEligible(@PathVariable String id) {
+        return ResponseEntity.ok(eligibilityService.isEligible(id));
     }
 }

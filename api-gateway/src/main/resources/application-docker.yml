@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: property-service
+              uri: http://property-service:8080
+              predicates:
+                - Path=/api/properties/**
+
+            - id: owners-service
+              uri: http://owners-service:8080
+              predicates:
+                - Path=/api/owners/**
+
+            - id: tenant-service
+              uri: http://tenant-service:8080
+              predicates:
+                - Path=/api/tenants/**
+
+            - id: rental-service
+              uri: http://rental-service:8080
+              predicates:
+                - Path=/api/rentals/**
+
+server:
+  port: 8080
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: property-service
+        url: http://localhost:8081/v3/api-docs
+      - name: owners-service
+        url: http://localhost:8082/v3/api-docs
+      - name: tenant-service
+        url: http://localhost:8083/v3/api-docs
+      - name: rental-service
+        url: http://localhost:8084/v3/api-docs

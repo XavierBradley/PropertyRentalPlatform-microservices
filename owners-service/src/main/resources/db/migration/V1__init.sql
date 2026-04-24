@@ -3,7 +3,7 @@
    ========================= */
 
 CREATE TABLE IF NOT EXISTS owners (
-    id          VARCHAR(255) PRIMARY KEY,
+    id          UUID PRIMARY KEY,
     full_name   VARCHAR(100) NOT NULL,
     address     VARCHAR(200),
     status      VARCHAR(20) NOT NULL

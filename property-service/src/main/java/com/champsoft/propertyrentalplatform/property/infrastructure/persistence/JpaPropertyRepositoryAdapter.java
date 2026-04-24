@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 public class JpaPropertyRepositoryAdapter implements PropertyRepositoryPort {
@@ -50,7 +51,7 @@ public class JpaPropertyRepositoryAdapter implements PropertyRepositoryPort {
 
     private PropertyJpaEntity toEntity(Property v) {
         var e = new PropertyJpaEntity();
-        e.id = v.id().value();
+        e.id = UUID.fromString(v.id().value());
         e.tax = v.tax().value();
         e.address = v.address().value();
         e.status = v.status().name();
@@ -59,7 +60,7 @@ public class JpaPropertyRepositoryAdapter implements PropertyRepositoryPort {
 
     private Property toDomain(PropertyJpaEntity e) {
         var property = new Property(
-                PropertyId.of(e.id),
+                PropertyId.of(String.valueOf(e.id)),
                 new PropertyTax(e.tax),
                 new Address(e.address)
 

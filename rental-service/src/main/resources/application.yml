@@ -30,3 +30,11 @@ logging:
   level:
     org.hibernate.SQL: debug
     org.hibernate.type.descriptor.sql.BasicBinder: trace
+
+services:
+  property:
+    base-url: http://localhost:8081
+  owners:
+    base-url: http://localhost:8082
+  tenant:
+    base-url: http://localhost:8083

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 public class JpaTenantRepositoryAdapter implements TenantRepositoryPort {
@@ -37,7 +38,7 @@ public class JpaTenantRepositoryAdapter implements TenantRepositoryPort {
 
     private TenantJpaEntity toEntity(Tenant a) {
         var e = new TenantJpaEntity();
-        e.id = a.id().value();
+        e.id = UUID.fromString(a.id().value());
         e.name = a.name();
         e.score = a.score().value();
         e.details = new BankDetailsEmbeddable(
@@ -50,7 +51,7 @@ public class JpaTenantRepositoryAdapter implements TenantRepositoryPort {
 
     private Tenant toDomain(TenantJpaEntity e) {
         var a = new Tenant(
-                TenantId.of(e.id),
+                TenantId.of(String.valueOf(e.id)),
                 e.name,
                 new CreditScore(e.score),
                 new BankDetails(

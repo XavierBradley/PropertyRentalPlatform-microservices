@@ -1,0 +1,159 @@
+version: "3.9"
+
+services:
+  # ---- DATABASES ----
+  property-db:
+    image: postgres:18.3
+    container_name: property-db
+    environment:
+      POSTGRES_DB: property_db
+      POSTGRES_USER: lex
+      POSTGRES_PASSWORD: 1987
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - property_pg_data:/var/lib/postgresql
+
+  owners-db:
+    image: postgres:18.3
+    container_name: owners-db
+    environment:
+      POSTGRES_DB: owners_db
+      POSTGRES_USER: lex
+      POSTGRES_PASSWORD: 1987
+
+    ports:
+      - "5434:5432"
+
+    volumes:
+      - owners_pg_data:/var/lib/postgresql
+
+  tenant-db:
+    image: postgres:18.3
+    container_name: tenant-db
+    environment:
+      POSTGRES_DB: tenant
+      POSTGRES_USER: lex
+      POSTGRES_PASSWORD: 1987
+
+    ports:
+      - "5435:5432"
+
+    volumes:
+      - tenant_pg_data:/var/lib/postgresql
+
+  rental-db:
+    image: postgres:18.3
+    container_name: rental-db
+    environment:
+      POSTGRES_DB: rental_db
+      POSTGRES_USER: lex
+      POSTGRES_PASSWORD: 1987
+
+    ports:
+      - "5436:5432"
+
+    volumes:
+      - rental_pg_data:/var/lib/postgresql
+
+
+  # ---- SERVICES ----
+  property-service:
+    build: ./property-service
+    container_name: property-service
+    environment:
+      SPRING_PROFILES_ACTIVE: pg
+      POSTGRES_HOST: property-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: property_db
+      POSTGRES_USER: lex
+      POSTGRES_PASSWORD: 1987
+      SERVER_PORT: 8080
+
+    depends_on:
+      - property-db
+
+    ports:
+      - "8081:8080"
+
+  owners-service:
+    build: ./owners-service
+    container_name: owners-service
+    environment:
+      SPRING_PROFILES_ACTIVE: pg
+      POSTGRES_HOST: owners-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: owners_db
+      POSTGRES_USER: lex
+      POSTGRES_PASSWORD: 1987
+      SERVER_PORT: 8080
+
+    depends_on:
+      - owners-db
+
+    ports:
+      - "8082:8080"
+
+  tenant-service:
+    build: ./tenant-service
+    container_name: tenant-service
+    environment:
+      SPRING_PROFILES_ACTIVE: pg
+      POSTGRES_HOST: tenant-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: tenant_db
+      POSTGRES_USER: lex
+      POSTGRES_PASSWORD: 1987
+      SERVER_PORT: 8080
+
+    depends_on:
+      - tenant-db
+
+    ports:
+      - "8083:8080"
+
+  rental-service:
+    build: ./rental-service
+    container_name: rental-service
+    environment:
+      SPRING_PROFILES_ACTIVE: pg, docker
+      POSTGRES_HOST: rental-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: rental_db
+      POSTGRES_USER: lex
+      POSTGRES_PASSWORD: 1987
+      SERVER_PORT: 8080
+
+    depends_on:
+      - rental-db
+      - property-db
+      - owners-db
+      - tenant-db
+
+    ports:
+      - "8084:8080"
+
+
+  # ---- API GATEWAY ----
+  api-gateway:
+    build: ./api-gateway
+    environment:
+      SPRING_PROFILE_ACTIVE: docker
+      SERVER_PORT: 8080
+
+    depends_on:
+      - rental-service
+      - property-service
+      - owners-service
+      - tenant-service
+
+    ports:
+      - "8080:8080"
+
+volumes:
+  property_pg_data:
+  owners_pg_data:
+  tenants_pg_data:
+  rental_pg_data:
