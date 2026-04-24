@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/property")
+@RequestMapping("/api/properties")
 public class PropertyController {
 
     private final PropertyCrudService service;

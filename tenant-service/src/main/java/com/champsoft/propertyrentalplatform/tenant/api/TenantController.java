@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/tenant")
+@RequestMapping("/api/tenants")
 public class TenantController {
 
     private final TenantCrudService service;

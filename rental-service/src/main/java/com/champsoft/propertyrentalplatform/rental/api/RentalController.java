@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/rental")
+@RequestMapping("/api/rentals")
 public class RentalController {
 
     private final RentalOrchestrator orchestrator;
