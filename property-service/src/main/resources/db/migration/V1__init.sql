@@ -4,7 +4,7 @@
 
 CREATE TABLE IF NOT EXISTS properties (
     id          UUID PRIMARY KEY,
-    tax         DOUBLE NOT NULL,
+    tax         DOUBLE PRECISION NOT NULL,
     address     VARCHAR(200) NOT NULL,
     status      VARCHAR(20) NOT NULL
 );
