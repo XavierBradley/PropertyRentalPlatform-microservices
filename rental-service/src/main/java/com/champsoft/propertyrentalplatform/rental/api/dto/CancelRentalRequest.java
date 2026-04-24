@@ -2,11 +2,13 @@ package com.champsoft.propertyrentalplatform.rental.api.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
+import java.util.UUID;
+
 public record CancelRentalRequest(
-        @NotBlank String id
+        @NotBlank UUID id
 ) {
 
-    public String rentalId() {
+    public UUID rentalId() {
         return id;
     }
 }

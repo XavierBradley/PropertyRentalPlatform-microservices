@@ -1,7 +1,9 @@
 package com.champsoft.propertyrentalplatform.tenant.api.dto;
 
+import java.util.UUID;
+
 public record TenantResponse(
-        String id,
+        UUID id,
         String name,
         int role,
         String accountNumber,

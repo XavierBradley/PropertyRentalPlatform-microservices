@@ -6,6 +6,8 @@ import com.champsoft.propertyrentalplatform.property.domain.model.PropertyId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 public class PropertyEligibilityService {
 
@@ -16,7 +18,7 @@ public class PropertyEligibilityService {
     }
 
     @Transactional(readOnly = true)
-    public boolean isEligible(String propertyId) {
+    public boolean isEligible(UUID propertyId) {
         return repo.findById(PropertyId.of(propertyId))
                 .map(v -> v.isEligibleToBeRented())
                 .orElseThrow(() -> new PropertyNotFoundException("Property not found: " + propertyId));

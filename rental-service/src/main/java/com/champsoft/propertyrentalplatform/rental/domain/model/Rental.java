@@ -1,5 +1,7 @@
 package com.champsoft.propertyrentalplatform.rental.domain.model;
 
+import java.util.UUID;
+
 public class Rental {
     private final RentalId id;
     private final PropertyRef propertyId;
@@ -30,9 +32,9 @@ public class Rental {
     public RentalStatus status() { return status; }
 
     // convenience accessors for API layer to avoid nested record accessor issues
-    public String propertyIdValue() { return propertyId.value(); }
-    public String ownerIdValue() { return ownerId.value(); }
-    public String tenantIdValue() { return tenantId.value(); }
+    public UUID propertyIdValue() { return propertyId.value(); }
+    public UUID ownerIdValue() { return ownerId.value(); }
+    public UUID tenantIdValue() { return tenantId.value(); }
     public double rentValue() { return rent.amount(); }
     public java.time.LocalDate expiryValue() { return expiry.value(); }
 

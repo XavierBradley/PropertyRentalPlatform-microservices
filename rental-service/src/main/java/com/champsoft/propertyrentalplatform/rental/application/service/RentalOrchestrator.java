@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Service
 public class RentalOrchestrator {
@@ -30,7 +31,7 @@ public class RentalOrchestrator {
     }
 
     @Transactional
-    public Rental register(String vehicleId, String ownerId, String agentId, double rent, LocalDate expiry) {
+    public Rental register(UUID vehicleId, UUID ownerId, UUID agentId, double rent, LocalDate expiry) {
 
         if (!propertyPort.isEligible(vehicleId)) {
             throw new CrossContextValidationException("Property is not eligible (must be AVAILABLE)");

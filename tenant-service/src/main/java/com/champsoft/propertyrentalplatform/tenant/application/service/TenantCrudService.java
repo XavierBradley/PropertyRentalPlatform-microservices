@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class TenantCrudService {
@@ -28,7 +29,7 @@ public class TenantCrudService {
     }
 
     @Transactional(readOnly = true)
-    public Tenant getById(String id) {
+    public Tenant getById(UUID id) {
         return repo.findById(TenantId.of(id))
                 .orElseThrow(() -> new TenantNotFoundException("Tenant not found: " + id));
     }
@@ -37,21 +38,21 @@ public class TenantCrudService {
     public List<Tenant> list() { return repo.findAll(); }
 
     @Transactional
-    public Tenant update(String id, String name, int score, String accountNumber, String ABA) {
+    public Tenant update(UUID id, String name, int score, String accountNumber, String ABA) {
         var a = getById(id);
         a.update(name, new CreditScore(score), new BankDetails(accountNumber, ABA));
         return repo.save(a);
     }
 
     @Transactional
-    public Tenant activate(String id) {
+    public Tenant activate(UUID id) {
         var a = getById(id);
         a.activate();
         return repo.save(a);
     }
 
     @Transactional
-    public void delete(String id) {
+    public void delete(UUID id) {
         getById(id);
         repo.deleteById(TenantId.of(id));
     }

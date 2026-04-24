@@ -1,9 +1,9 @@
 package com.champsoft.propertyrentalplatform.rental.domain.model;
 
-public record PropertyRef(String value) {
+import java.util.UUID;
+
+public record PropertyRef(UUID value) {
     public PropertyRef {
         if (value == null) throw new IllegalArgumentException("propertyId is required");
-        value = value.trim();
-        if (value.isEmpty()) throw new IllegalArgumentException("propertyId is required");
     }
 }

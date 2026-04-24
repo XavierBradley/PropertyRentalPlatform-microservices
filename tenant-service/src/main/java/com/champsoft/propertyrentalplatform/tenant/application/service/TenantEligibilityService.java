@@ -6,6 +6,8 @@ import com.champsoft.propertyrentalplatform.tenant.domain.model.TenantId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 public class TenantEligibilityService {
 
@@ -13,7 +15,7 @@ public class TenantEligibilityService {
     public TenantEligibilityService(TenantRepositoryPort repo) { this.repo = repo; }
 
     @Transactional(readOnly = true)
-    public boolean isEligible(String agentId) {
+    public boolean isEligible(UUID agentId) {
         return repo.findById(TenantId.of(agentId))
                 .map(t -> t.isEligibleForRegistration())
                 .orElseThrow(() -> new TenantNotFoundException("Agent not found: " + agentId));

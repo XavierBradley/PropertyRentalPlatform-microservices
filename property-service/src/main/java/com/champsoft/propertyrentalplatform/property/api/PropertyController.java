@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/property")
@@ -31,7 +32,7 @@ public class PropertyController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> get(@PathVariable String id) {
+    public ResponseEntity<?> get(@PathVariable UUID id) {
         return ResponseEntity.ok(PropertyApiMapper.toResponse(service.getById(id)));
     }
 
@@ -42,25 +43,25 @@ public class PropertyController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable String id, @RequestBody @Valid UpdatePropertyRequest req) {
+    public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody @Valid UpdatePropertyRequest req) {
         var v = service.update(id, req.tax(), req.address());
         return ResponseEntity.ok(PropertyApiMapper.toResponse(v));
     }
 
     @PostMapping("/{id}/activate")
-    public ResponseEntity<?> activate(@PathVariable String id) {
+    public ResponseEntity<?> activate(@PathVariable UUID id) {
         var v = service.activate(id);
         return ResponseEntity.ok(PropertyApiMapper.toResponse(v));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable String id) {
+    public ResponseEntity<?> delete(@PathVariable UUID id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/eligibility")
-    public ResponseEntity<Boolean> isEligible(@PathVariable String id) {
+    public ResponseEntity<Boolean> isEligible(@PathVariable UUID id) {
         return ResponseEntity.ok(eligibilityService.isEligible(id));
     }
 }

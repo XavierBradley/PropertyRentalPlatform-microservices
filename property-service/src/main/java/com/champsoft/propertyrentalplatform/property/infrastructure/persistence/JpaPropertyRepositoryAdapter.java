@@ -51,7 +51,7 @@ public class JpaPropertyRepositoryAdapter implements PropertyRepositoryPort {
 
     private PropertyJpaEntity toEntity(Property v) {
         var e = new PropertyJpaEntity();
-        e.id = UUID.fromString(v.id().value());
+        e.id = v.id().value();
         e.tax = v.tax().value();
         e.address = v.address().value();
         e.status = v.status().name();
@@ -60,7 +60,7 @@ public class JpaPropertyRepositoryAdapter implements PropertyRepositoryPort {
 
     private Property toDomain(PropertyJpaEntity e) {
         var property = new Property(
-                PropertyId.of(String.valueOf(e.id)),
+                PropertyId.of(e.id),
                 new PropertyTax(e.tax),
                 new Address(e.address)
 

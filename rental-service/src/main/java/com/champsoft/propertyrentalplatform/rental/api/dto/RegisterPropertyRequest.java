@@ -4,10 +4,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 public record RegisterPropertyRequest(
-        @NotBlank String propertyId,
-        @NotBlank String ownerId,
-        @NotBlank String tenantId,
+        @NotBlank UUID propertyId,
+        @NotBlank UUID ownerId,
+        @NotBlank UUID tenantId,
         double rent,
         @NotNull LocalDate expiry) {}

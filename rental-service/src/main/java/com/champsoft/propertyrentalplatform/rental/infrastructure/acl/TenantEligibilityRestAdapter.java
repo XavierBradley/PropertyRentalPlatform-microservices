@@ -8,13 +8,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.UUID;
+
 
 @Component
 public class TenantEligibilityRestAdapter implements TenantEligibilityPort {
 
     private final RestTemplate restTemplate;
 
-    @Value("${service.tenants.base-url}")
+    @Value("${services.tenant.base-url}")
     private String tenantsBaseUrl;
 
     public TenantEligibilityRestAdapter(RestTemplate restTemplate) {
@@ -22,7 +24,7 @@ public class TenantEligibilityRestAdapter implements TenantEligibilityPort {
     }
 
     @Override
-    public boolean isEligible(String tenantId) {
+    public boolean isEligible(UUID tenantId) {
         String url = tenantsBaseUrl + "api/tenants/" + tenantId + ".eligibility";
 
         try {

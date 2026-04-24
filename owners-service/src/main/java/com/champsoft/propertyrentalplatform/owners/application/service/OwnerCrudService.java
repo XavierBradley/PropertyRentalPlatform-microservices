@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class OwnerCrudService {
@@ -29,7 +30,7 @@ public class OwnerCrudService {
     }
 
     @Transactional(readOnly = true)
-    public Owner getById(String id) {
+    public Owner getById(UUID id) {
         return repo.findById(OwnerId.of(id))
                 .orElseThrow(() -> new OwnerNotFoundException("Owner not found: " + id));
     }
@@ -38,28 +39,28 @@ public class OwnerCrudService {
     public List<Owner> list() { return repo.findAll(); }
 
     @Transactional
-    public Owner update(String id, String fullName, String address) {
+    public Owner update(UUID id, String fullName, String address) {
         var owner = getById(id);
         owner.update(new FullName(fullName), new Address(address));
         return repo.save(owner);
     }
 
     @Transactional
-    public Owner activate(String id) {
+    public Owner activate(UUID id) {
         var owner = getById(id);
         owner.activate();
         return repo.save(owner);
     }
 
     @Transactional
-    public Owner deactivate(String id) {
+    public Owner deactivate(UUID id) {
         var owner = getById(id);
         owner.deactivate();
         return repo.save(owner);
     }
 
     @Transactional
-    public void delete(String id) {
+    public void delete(UUID id) {
         getById(id);
         repo.deleteById(OwnerId.of(id));
     }

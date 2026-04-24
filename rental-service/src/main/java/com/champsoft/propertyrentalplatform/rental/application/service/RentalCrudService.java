@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class RentalCrudService {
@@ -19,7 +20,7 @@ public class RentalCrudService {
     }
 
     @Transactional(readOnly = true)
-    public Rental get(String id) {
+    public Rental get(UUID id) {
         return repo.findById(RentalId.of(id))
                 .orElseThrow(() -> new RentalNotFoundException("Registration not found: " + id));
     }
@@ -30,21 +31,21 @@ public class RentalCrudService {
     }
 
     @Transactional
-    public Rental renew(String id, LocalDate newExpiry) {
+    public Rental renew(UUID id, LocalDate newExpiry) {
         var reg = get(id);
         reg.renew(new ExpiryDate(newExpiry));
         return repo.save(reg);
     }
 
     @Transactional
-    public Rental cancel(String id) {
+    public Rental cancel(UUID id) {
         var reg = get(id);
         reg.cancel();
         return repo.save(reg);
     }
 
     @Transactional
-    public void delete(String id) {
+    public void delete(UUID id) {
         get(id);
         repo.deleteById(RentalId.of(id));
     }

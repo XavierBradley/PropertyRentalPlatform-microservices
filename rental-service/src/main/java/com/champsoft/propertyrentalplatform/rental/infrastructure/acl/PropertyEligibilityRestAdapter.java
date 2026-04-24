@@ -8,12 +8,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.UUID;
+
 @Component
 public class PropertyEligibilityRestAdapter implements PropertyEligibilityPort {
 
     private final RestTemplate restTemplate;
 
-    @Value("${service.properties.base-url}")
+    @Value("${services.property.base-url}")
     private String propertiesBaseUrl;
 
     public PropertyEligibilityRestAdapter(RestTemplate restTemplate) {
@@ -21,7 +23,7 @@ public class PropertyEligibilityRestAdapter implements PropertyEligibilityPort {
     }
 
     @Override
-    public boolean isEligible(String propertyId) {
+    public boolean isEligible(UUID propertyId) {
         String url = propertiesBaseUrl + "api/properties/" + propertyId + ".eligibility";
 
         try {

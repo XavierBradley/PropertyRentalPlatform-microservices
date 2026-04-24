@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/rental")
@@ -37,7 +38,7 @@ public class RentalController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EntityModel<RentalResponse>> get(@PathVariable String id) {
+    public ResponseEntity<EntityModel<RentalResponse>> get(@PathVariable UUID id) {
         var response = RentalApiMapper.toResponse(crud.get(id));
         return ResponseEntity.ok(assembler.toModel(response));
     }
@@ -53,7 +54,7 @@ public class RentalController {
 
     @PostMapping("/{id}/renew")
     public ResponseEntity<EntityModel<RentalResponse>> renew(
-            @PathVariable String id,
+            @PathVariable UUID id,
             @RequestBody @Valid RenewRentalRequest req
     ) {
         var reg = crud.renew(id, req.newExpiry());
@@ -62,14 +63,14 @@ public class RentalController {
     }
 
     @PostMapping("/{id}/cancel")
-    public ResponseEntity<EntityModel<RentalResponse>> cancel(@PathVariable String id) {
+    public ResponseEntity<EntityModel<RentalResponse>> cancel(@PathVariable UUID id) {
         var reg = crud.cancel(id);
         var response = RentalApiMapper.toResponse(reg);
         return ResponseEntity.ok(assembler.toModel(response));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable String id) {
+    public ResponseEntity<?> delete(@PathVariable UUID id) {
         crud.delete(id);
         return ResponseEntity.noContent().build();
     }

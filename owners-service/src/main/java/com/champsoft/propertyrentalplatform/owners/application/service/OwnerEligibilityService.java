@@ -6,6 +6,8 @@ import com.champsoft.propertyrentalplatform.owners.domain.model.OwnerId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 public class OwnerEligibilityService {
 
@@ -13,7 +15,7 @@ public class OwnerEligibilityService {
     public OwnerEligibilityService(OwnerRepositoryPort repo) { this.repo = repo; }
 
     @Transactional(readOnly = true)
-    public boolean isEligible(String ownerId) {
+    public boolean isEligible(UUID ownerId) {
         return repo.findById(OwnerId.of(ownerId))
                 .map(o -> o.isEligibleForRegistration())
                 .orElseThrow(() -> new OwnerNotFoundException("Owner not found: " + ownerId));

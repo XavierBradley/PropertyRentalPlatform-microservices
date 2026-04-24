@@ -8,6 +8,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/tenant")
 public class TenantController {
@@ -27,7 +29,7 @@ public class TenantController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> get(@PathVariable String id) {
+    public ResponseEntity<?> get(@PathVariable UUID id) {
         return ResponseEntity.ok(TenantApiMapper.toResponse(service.getById(id)));
     }
 
@@ -35,25 +37,25 @@ public class TenantController {
     public ResponseEntity<?> list() { return ResponseEntity.ok(service.list().stream().map(TenantApiMapper::toResponse).toList()); }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable String id, @RequestBody @Valid UpdateTenantRequest req) {
+    public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody @Valid UpdateTenantRequest req) {
         var a = service.update(id, req.name(), req.score(), req.accountNumber(), req.ABA());
         return ResponseEntity.ok(TenantApiMapper.toResponse(a));
     }
 
     @PostMapping("/{id}/activate")
-    public ResponseEntity<?> activate(@PathVariable String id) {
+    public ResponseEntity<?> activate(@PathVariable UUID id) {
         var a = service.activate(id);
         return ResponseEntity.ok(TenantApiMapper.toResponse(a));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable String id) {
+    public ResponseEntity<?> delete(@PathVariable UUID id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/eligibility")
-    public ResponseEntity<Boolean> isEligible(@PathVariable String id) {
+    public ResponseEntity<Boolean> isEligible(@PathVariable UUID id) {
         return ResponseEntity.ok(eligibilityService.isEligible(id));
     }
 }

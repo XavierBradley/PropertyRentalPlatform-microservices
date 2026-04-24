@@ -4,17 +4,17 @@ import java.util.Objects;
 import java.util.UUID;
 
 public final class TenantId {
-    private final String value;
+    private final UUID value;
 
-    private TenantId(String value) { this.value = value; }
+    private TenantId(UUID value) { this.value = value; }
 
-    public static TenantId newId() { return new TenantId(UUID.randomUUID().toString()); }
-    public static TenantId of(String value) { return new TenantId(value); }
-    public String value() { return value; }
+    public static TenantId newId() { return new TenantId(UUID.randomUUID()); }
+    public static TenantId of(UUID value) { return new TenantId(value); }
+    public UUID value() { return value; }
 
     @Override public boolean equals(Object o) {
         return (o instanceof TenantId other) && Objects.equals(value, other.value);
     }
     @Override public int hashCode() { return Objects.hash(value); }
-    @Override public String toString() { return value; }
+    @Override public String toString() { return String.valueOf(value); }
 }

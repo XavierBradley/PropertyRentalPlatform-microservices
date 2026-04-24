@@ -7,6 +7,7 @@ import com.champsoft.propertyrentalplatform.property.application.port.out.Proper
 import com.champsoft.propertyrentalplatform.property.domain.model.*;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +31,7 @@ public class PropertyCrudService {
     }
 
     @Transactional(readOnly = true)
-    public Property getById(String id) {
+    public Property getById(UUID id) {
         return repo.findById(PropertyId.of(id))
                 .orElseThrow(() -> new PropertyNotFoundException("Property not found: " + id));
     }
@@ -47,7 +48,7 @@ public class PropertyCrudService {
     }
 
     @Transactional
-    public Property update(String id, double tax, String address) {
+    public Property update(UUID id, double tax, String address) {
         var property = getById(id);
 
         var a = new Address(address);
@@ -58,14 +59,14 @@ public class PropertyCrudService {
     }
 
     @Transactional
-    public Property activate(String id) {
+    public Property activate(UUID id) {
         var property = getById(id);
         property.rent();
         return repo.save(property);
     }
 
     @Transactional
-    public void delete(String id) {
+    public void delete(UUID id) {
         getById(id);
         repo.deleteById(PropertyId.of(id));
     }

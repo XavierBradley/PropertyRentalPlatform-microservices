@@ -38,10 +38,10 @@ public class JpaRentalRepositoryAdapter implements RentalRepositoryPort {
 
     private RentalJpaEntity toEntity(Rental reg) {
         var e = new RentalJpaEntity();
-        e.id = UUID.fromString(reg.id().value());
-        e.propertyId = UUID.fromString(reg.propertyId().value());
-        e.ownerId = UUID.fromString(reg.ownerId().value());
-        e.tenantId = UUID.fromString(reg.tenantId().value());
+        e.id = reg.id().value();
+        e.propertyId = reg.propertyId().value();
+        e.ownerId = reg.ownerId().value();
+        e.tenantId = reg.tenantId().value();
         e.rent = BigDecimal.valueOf(reg.rent().amount());
         e.expiry = reg.expiry().value();
         e.status = reg.status().name();
@@ -50,10 +50,10 @@ public class JpaRentalRepositoryAdapter implements RentalRepositoryPort {
 
     private Rental toDomain(RentalJpaEntity e) {
         var reg = new Rental(
-                RentalId.of(String.valueOf(e.id)),
-                new PropertyRef(String.valueOf(e.propertyId)),
-                new OwnerRef(String.valueOf(e.ownerId)),
-                new TenantRef(String.valueOf(e.tenantId)),
+                RentalId.of(e.id),
+                new PropertyRef(e.propertyId),
+                new OwnerRef(e.ownerId),
+                new TenantRef(e.tenantId),
                 new Rent(Double.parseDouble(String.valueOf(e.rent))),
                 new ExpiryDate(e.expiry)
         );
