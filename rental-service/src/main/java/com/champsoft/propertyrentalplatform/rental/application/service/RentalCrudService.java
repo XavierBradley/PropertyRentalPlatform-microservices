@@ -22,7 +22,7 @@ public class RentalCrudService {
     @Transactional(readOnly = true)
     public Rental get(UUID id) {
         return repo.findById(RentalId.of(id))
-                .orElseThrow(() -> new RentalNotFoundException("Registration not found: " + id));
+                .orElseThrow(() -> new RentalNotFoundException("Rental not found: " + id));
     }
 
     @Transactional(readOnly = true)

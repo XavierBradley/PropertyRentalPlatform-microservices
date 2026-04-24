@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.UUID;
@@ -25,7 +26,7 @@ public class TenantEligibilityRestAdapter implements TenantEligibilityPort {
 
     @Override
     public boolean isEligible(UUID tenantId) {
-        String url = tenantsBaseUrl + "api/tenants/" + tenantId + ".eligibility";
+        String url = tenantsBaseUrl + "api/tenants/" + tenantId + "/eligibility";
 
         try {
             Boolean result = restTemplate.getForObject(url, Boolean.class);
@@ -37,7 +38,7 @@ public class TenantEligibilityRestAdapter implements TenantEligibilityPort {
         }catch (HttpClientErrorException ex) {
 
             throw new CrossContextValidationException("Tenant validation failed : " + tenantId);
-        }catch (Exception ex) {
+        }catch (ResourceAccessException ex) {
 
             throw new CrossContextValidationException("Tenant service is unavailable");
         }

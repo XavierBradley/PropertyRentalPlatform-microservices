@@ -7,8 +7,8 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public record RegisterPropertyRequest(
-        @NotBlank UUID propertyId,
-        @NotBlank UUID ownerId,
-        @NotBlank UUID tenantId,
+        @NotNull UUID propertyId,
+        @NotNull UUID ownerId,
+        @NotNull UUID tenantId,
         double rent,
         @NotNull LocalDate expiry) {}
