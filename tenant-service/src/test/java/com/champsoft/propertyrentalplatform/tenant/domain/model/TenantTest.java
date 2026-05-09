@@ -2,92 +2,191 @@ package com.champsoft.propertyrentalplatform.tenant.domain.model;
 
 import com.champsoft.propertyrentalplatform.tenant.domain.exception.InvalidTenantNameException;
 import com.champsoft.propertyrentalplatform.tenant.domain.exception.TooLowCreditScoreException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-// Domain test → full aggregate behavior
 class TenantTest {
 
-    private Tenant validTenant() {
+    private Tenant tenant() {
+
         return new Tenant(
                 TenantId.newId(),
                 "John Doe",
                 new CreditScore(700),
-                new BankDetails("123456789012", "123456789")
+                new BankDetails(
+                        "123456789012",
+                        "123456789"
+                )
         );
     }
 
     @Test
+    @DisplayName("Should create inactive tenant")
     void shouldCreateInactiveTenant() {
 
-        // ------------------- Arrange -------------------
-        Tenant tenant = validTenant();
+        Tenant tenant = tenant();
 
-        // ------------------- Assert -------------------
-        assertThat(tenant.status()).isEqualTo(TenantStatus.INACTIVE);
-        assertThat(tenant.isEligibleForRegistration()).isFalse();
+        assertThat(tenant.name())
+                .isEqualTo("John Doe");
+
+        assertThat(tenant.score().value())
+                .isEqualTo(700);
+
+        assertThat(tenant.status())
+                .isEqualTo(TenantStatus.INACTIVE);
     }
 
     @Test
-    void shouldActivateTenant() {
+    @DisplayName("Should trim tenant name")
+    void shouldTrimTenantName() {
 
-        // ------------------- Arrange -------------------
-        Tenant tenant = validTenant();
-
-        // ------------------- Act -------------------
-        tenant.activate();
-
-        // ------------------- Assert -------------------
-        assertThat(tenant.status()).isEqualTo(TenantStatus.ACTIVE);
-        assertThat(tenant.isEligibleForRegistration()).isTrue();
-    }
-
-    @Test
-    void shouldRejectInvalidTenantName() {
-
-        // ------------------- Assert -------------------
-        assertThatThrownBy(() ->
-                new Tenant(
-                        TenantId.newId(),
-                        "12345",
-                        new CreditScore(700),
-                        new BankDetails("123456789012", "123456789")
+        Tenant tenant = new Tenant(
+                TenantId.newId(),
+                "  John Doe  ",
+                new CreditScore(700),
+                new BankDetails(
+                        "123456789012",
+                        "123456789"
                 )
-        ).isInstanceOf(InvalidTenantNameException.class);
+        );
+
+        assertThat(tenant.name())
+                .isEqualTo("John Doe");
     }
 
     @Test
-    void shouldRejectLowCreditScoreOnCreation() {
+    @DisplayName("Should update tenant")
+    void shouldUpdateTenant() {
 
-        // ------------------- Assert -------------------
-        assertThatThrownBy(() ->
-                new Tenant(
-                        TenantId.newId(),
-                        "John Doe",
-                        new CreditScore(350),
-                        new BankDetails("123456789012", "123456789")
-                )
-        ).isInstanceOf(TooLowCreditScoreException.class);
-    }
+        Tenant tenant = tenant();
 
-    @Test
-    void shouldUpdateTenantSuccessfully() {
-
-        // ------------------- Arrange -------------------
-        Tenant tenant = validTenant();
-
-        // ------------------- Act -------------------
         tenant.update(
                 "Jane Doe",
                 new CreditScore(750),
-                new BankDetails("999999999999", "111111111")
+                new BankDetails(
+                        "999999999999",
+                        "987654321"
+                )
         );
 
-        // ------------------- Assert -------------------
-        assertThat(tenant.name()).isEqualTo("Jane Doe");
-        assertThat(tenant.score().value()).isEqualTo(750);
-        assertThat(tenant.details().accountNumber()).isEqualTo("999999999999");
+        assertThat(tenant.name())
+                .isEqualTo("Jane Doe");
+
+        assertThat(tenant.score().value())
+                .isEqualTo(750);
+
+        assertThat(tenant.details().accountNumber())
+                .isEqualTo("999999999999");
+    }
+
+    @Test
+    @DisplayName("Should activate tenant")
+    void shouldActivateTenant() {
+
+        Tenant tenant = tenant();
+
+        tenant.activate();
+
+        assertThat(tenant.status())
+                .isEqualTo(TenantStatus.ACTIVE);
+    }
+
+    @Test
+    @DisplayName("Should be eligible when active")
+    void shouldBeEligibleWhenActive() {
+
+        Tenant tenant = tenant();
+
+        tenant.activate();
+
+        assertThat(tenant.isEligibleForRegistration())
+                .isTrue();
+    }
+
+    @Test
+    @DisplayName("Should not be eligible when inactive")
+    void shouldNotBeEligibleWhenInactive() {
+
+        Tenant tenant = tenant();
+
+        assertThat(tenant.isEligibleForRegistration())
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("Should throw when tenant name contains invalid characters")
+    void shouldThrowWhenTenantNameContainsInvalidCharacters() {
+
+        assertThrows(
+                InvalidTenantNameException.class,
+                () -> new Tenant(
+                        TenantId.newId(),
+                        "John123",
+                        new CreditScore(700),
+                        new BankDetails(
+                                "123456789012",
+                                "123456789"
+                        )
+                )
+        );
+    }
+
+    @Test
+    @DisplayName("Should throw when tenant name is too short")
+    void shouldThrowWhenTenantNameIsTooShort() {
+
+        assertThrows(
+                InvalidTenantNameException.class,
+                () -> new Tenant(
+                        TenantId.newId(),
+                        "J",
+                        new CreditScore(700),
+                        new BankDetails(
+                                "123456789012",
+                                "123456789"
+                        )
+                )
+        );
+    }
+
+    @Test
+    @DisplayName("Should throw when tenant name is too long")
+    void shouldThrowWhenTenantNameIsTooLong() {
+
+        String longName = "A".repeat(101);
+
+        assertThrows(
+                InvalidTenantNameException.class,
+                () -> new Tenant(
+                        TenantId.newId(),
+                        longName,
+                        new CreditScore(700),
+                        new BankDetails(
+                                "123456789012",
+                                "123456789"
+                        )
+                )
+        );
+    }
+
+    @Test
+    @DisplayName("Should throw when credit score is too low for tenant")
+    void shouldThrowWhenCreditScoreIsTooLowForTenant() {
+
+        assertThrows(
+                TooLowCreditScoreException.class,
+                () -> new Tenant(
+                        TenantId.newId(),
+                        "John Doe",
+                        new CreditScore(350),
+                        new BankDetails(
+                                "123456789012",
+                                "123456789"
+                        )
+                )
+        );
     }
 }

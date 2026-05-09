@@ -1,109 +1,92 @@
 package com.champsoft.propertyrentalplatform.tenant.application.service;
 
-
-import com.champsoft.vrms.agents.application.exception.AgentNotFoundException;
-import com.champsoft.vrms.agents.application.port.out.AgentRepositoryPort;
-import com.champsoft.vrms.agents.domain.model.Agent;
-import com.champsoft.vrms.agents.domain.model.AgentId;
-import com.champsoft.vrms.agents.domain.model.Role;
+import com.champsoft.propertyrentalplatform.tenant.application.exception.TenantNotFoundException;
+import com.champsoft.propertyrentalplatform.tenant.application.port.out.TenantRepositoryPort;
+import com.champsoft.propertyrentalplatform.tenant.domain.model.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-    // Enable Mockito → pure service test (NO Spring, NO DB, NO HTTP)
-    @ExtendWith(MockitoExtension.class)
-    public class TenantEligibilityServiceTest {
-        // Mocked repository → replaces real database access
-        // We fully control what this returns in each test
-        @Mock
-        private AgentRepositoryPort repo;
+class TenantEligibilityServiceTest {
 
-        // Real service under test
-        // Mockito injects the mocked repository into this service
-        @InjectMocks
-        private AgentEligibilityService service;
+    private TenantRepositoryPort repo;
 
-        // Helper method → creates a valid Agent object
-        // Default state = INACTIVE (important for eligibility logic)
-        private Agent sampleAgent() {
-            return new Agent(
-                    AgentId.of("agent-1"),
-                    "Alice Brown",
-                    Role.CLERK
-            );
-        }
+    private TenantEligibilityService service;
 
-        @Test
-        void shouldReturnTrueWhenAgentIsActive() {
+    @BeforeEach
+    void setUp() {
 
-            // ------------------- Arrange -------------------
-            // Create agent and activate it
-            // Business rule: ACTIVE → eligible
-            Agent agent = sampleAgent();
-            agent.activate();
+        repo = mock(TenantRepositoryPort.class);
 
-            // Mock repository → return this active agent
-            when(repo.findById(AgentId.of("agent-1")))
-                    .thenReturn(Optional.of(agent));
-
-            // ------------------- Act -------------------
-            // Call service method
-            boolean result = service.isEligible("agent-1");
-
-            // ------------------- Assert -------------------
-            // ACTIVE agent should be eligible
-            assertThat(result).isTrue();
-
-            // Verify repository lookup happened
-            verify(repo).findById(AgentId.of("agent-1"));
-        }
-
-        @Test
-        void shouldReturnFalseWhenAgentIsInactive() {
-
-            // ------------------- Arrange -------------------
-            // Create agent but DO NOT activate it
-            // Default state = INACTIVE
-            Agent agent = sampleAgent();
-
-            // Mock repository → return inactive agent
-            when(repo.findById(AgentId.of("agent-1")))
-                    .thenReturn(Optional.of(agent));
-
-            // ------------------- Act -------------------
-            boolean result = service.isEligible("agent-1");
-
-            // ------------------- Assert -------------------
-            // INACTIVE agent should NOT be eligible
-            assertThat(result).isFalse();
-
-            // Verify repository call
-            verify(repo).findById(AgentId.of("agent-1"));
-        }
-
-        @Test
-        void shouldThrowAgentNotFoundExceptionWhenAgentDoesNotExist() {
-
-            // ------------------- Arrange -------------------
-            // Repository returns empty → agent not found
-            when(repo.findById(AgentId.of("missing-agent")))
-                    .thenReturn(Optional.empty());
-
-            // ------------------- Act + Assert -------------------
-            // Service should throw exception when agent is missing
-            assertThrows(AgentNotFoundException.class,
-                    () -> service.isEligible("missing-agent"));
-
-            // Verify repository lookup was attempted
-            verify(repo).findById(AgentId.of("missing-agent"));
-        }
+        service = new TenantEligibilityService(repo);
     }
+
+    private Tenant tenant(UUID id) {
+
+        return new Tenant(
+                TenantId.of(id),
+                "John Doe",
+                new CreditScore(700),
+                new BankDetails(
+                        "123456789012",
+                        "123456789"
+                )
+        );
+    }
+
+    @Test
+    @DisplayName("Should return false when tenant is inactive")
+    void shouldReturnFalseWhenTenantIsInactive() {
+
+        UUID id = UUID.randomUUID();
+
+        Tenant tenant = tenant(id);
+
+        when(repo.findById(TenantId.of(id)))
+                .thenReturn(Optional.of(tenant));
+
+        boolean result = service.isEligible(id);
+
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should return true when tenant is active")
+    void shouldReturnTrueWhenTenantIsActive() {
+
+        UUID id = UUID.randomUUID();
+
+        Tenant tenant = tenant(id);
+
+        tenant.activate();
+
+        when(repo.findById(TenantId.of(id)))
+                .thenReturn(Optional.of(tenant));
+
+        boolean result = service.isEligible(id);
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("Should throw when tenant does not exist")
+    void shouldThrowWhenTenantDoesNotExist() {
+
+        UUID id = UUID.randomUUID();
+
+        when(repo.findById(TenantId.of(id)))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                TenantNotFoundException.class,
+                () -> service.isEligible(id)
+        );
+    }
+}

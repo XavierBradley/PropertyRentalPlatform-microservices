@@ -1,174 +1,99 @@
 package com.champsoft.propertyrentalplatform.property.api;
 
-
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-    // Negative integration test → tests invalid API scenarios
-// These tests make sure the API returns correct HTTP error codes
-// Uses Spring Boot, MockMvc, and the "testing" profile
-    @SpringBootTest
-    @AutoConfigureMockMvc
-    @ActiveProfiles("testing")
-    public class PropertyControllerIntegrationTest {
-        @Autowired
-        private MockMvc mockMvc;
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("testing")
+class PropertyControllerIntegrationTest {
 
-        // ObjectMapper is used to read JSON responses from the API.
-        // Here, we use it to extract the generated vehicle ID.
-        private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private MockMvc mockMvc;
 
-        @Test
-        void shouldReturnBadRequestWhenCreatingVehicleWithInvalidVin() throws Exception {
+    @Autowired
+    private ObjectMapper objectMapper;
 
-            // ------------------- Act + Assert -------------------
-            // Send a POST request with an invalid VIN.
-            // Business rule: VIN must follow the required format/length.
-            // Expected result: API returns 400 Bad Request.
-            mockMvc.perform(post("/api/cars")
-                            .contentType(APPLICATION_JSON)
-                            .content("""
-                                {
-                                  "vin": "BAD",
-                                  "make": "Toyota",
-                                  "model": "Corolla",
-                                  "year": 2020
-                                }
-                                """))
-                    .andExpect(status().isBadRequest());
-        }
+    @Test
+    @DisplayName("Should complete full property lifecycle")
+    void shouldCompletePropertyLifecycle() throws Exception {
 
-        @Test
-        void shouldReturnBadRequestWhenCreatingVehicleWithInvalidYear() throws Exception {
+        String createPayload = """
+                {
+                  "tax": 2500.0,
+                  "address": "123 Main Street"
+                }
+                """;
 
-            // ------------------- Act + Assert -------------------
-            // Send a POST request with an invalid vehicle year.
-            // Business rule: vehicle year must be inside the allowed range.
-            // Expected result: API returns 400 Bad Request.
-            mockMvc.perform(post("/api/cars")
-                            .contentType(APPLICATION_JSON)
-                            .content("""
-                                {
-                                  "vin": "1HGCM82633A123999",
-                                  "make": "Toyota",
-                                  "model": "Corolla",
-                                  "year": 1970
-                                }
-                                """))
-                    .andExpect(status().isBadRequest());
-        }
+        MvcResult createResult = mockMvc.perform(
+                        post("/api/properties")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(createPayload)
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.tax").value(2500.0))
+                .andExpect(jsonPath("$.address").value("123 Main Street"))
+                .andExpect(jsonPath("$.status").value("AVAILABLE"))
+                .andReturn();
 
-        @Test
-        void shouldReturnConflictWhenCreatingVehicleWithDuplicateVin() throws Exception {
+        String response =
+                createResult.getResponse().getContentAsString();
 
-            // ------------------- Arrange -------------------
-            // Use one VIN value twice.
-            // Business rule: two vehicles cannot have the same VIN.
-            String vin = "1HGCM82633A777777";
+        JsonNode json =
+                objectMapper.readTree(response);
 
-            // First request creates the vehicle successfully.
-            mockMvc.perform(post("/api/cars")
-                            .contentType(APPLICATION_JSON)
-                            .content("""
-                                {
-                                  "vin": "%s",
-                                  "make": "Toyota",
-                                  "model": "Corolla",
-                                  "year": 2020
-                                }
-                                """.formatted(vin)))
-                    .andExpect(status().isOk());
+        String id = json.get("id").asText();
 
-            // ------------------- Act + Assert -------------------
-            // Second request tries to create another vehicle with the same VIN.
-            // Expected result: API returns 409 Conflict.
-            mockMvc.perform(post("/api/cars")
-                            .contentType(APPLICATION_JSON)
-                            .content("""
-                                {
-                                  "vin": "%s",
-                                  "make": "Honda",
-                                  "model": "Civic",
-                                  "year": 2022
-                                }
-                                """.formatted(vin)))
-                    .andExpect(status().isConflict());
-        }
+        mockMvc.perform(get("/api/properties/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id));
 
-        @Test
-        void shouldReturnNotFoundWhenVehicleDoesNotExist() throws Exception {
+        mockMvc.perform(get("/api/properties"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)));
 
-            // ------------------- Act + Assert -------------------
-            // Try to get a vehicle using an ID that does not exist.
-            // Expected result: API returns 404 Not Found.
-            mockMvc.perform(get("/api/cars/{id}", "missing-car-id"))
-                    .andExpect(status().isNotFound());
-        }
+        String updatePayload = """
+                {
+                  "tax": 3000.0,
+                  "address": "456 Park Avenue"
+                }
+                """;
 
-        @Test
-        void shouldReturnNotFoundWhenUpdatingMissingVehicle() throws Exception {
+        mockMvc.perform(
+                        put("/api/properties/{id}", id)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updatePayload)
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tax").value(3000.0))
+                .andExpect(jsonPath("$.address").value("456 Park Avenue"));
 
-            // ------------------- Act + Assert -------------------
-            // Try to update a vehicle that does not exist.
-            // Even if the request body is valid, the vehicle ID is missing.
-            // Expected result: API returns 404 Not Found.
-            mockMvc.perform(put("/api/cars/{id}", "missing-car-id")
-                            .contentType(APPLICATION_JSON)
-                            .content("""
-                                {
-                                  "make": "Honda",
-                                  "model": "Civic",
-                                  "year": 2022
-                                }
-                                """))
-                    .andExpect(status().isNotFound());
-        }
+        mockMvc.perform(post("/api/properties/{id}/activate", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("AVAILABLE"));
 
-        @Test
-        void shouldReturnBadRequestWhenActivatingAlreadyActiveVehicle() throws Exception {
+        mockMvc.perform(get("/api/properties/{id}/eligibility", id))
+                .andExpect(status().isOk())
+                .andExpect(content().string("true"));
 
-            // Arrange
-            // Create a new vehicle. New vehicles start as INACTIVE.
-            MvcResult createResult = mockMvc.perform(post("/api/cars")
-                            .contentType(APPLICATION_JSON)
-                            .content("""
-                            {
-                              "vin": "1HGCM82633A888888",
-                              "make": "Mazda",
-                              "model": "Mazda3",
-                              "year": 2021
-                            }
-                            """))
-                    .andExpect(status().isOk())
-                    .andReturn();
+        mockMvc.perform(delete("/api/properties/{id}", id))
+                .andExpect(status().isNoContent());
 
-            // Extract the generated vehicle id from the JSON response.
-            JsonNode json = objectMapper.readTree(createResult.getResponse().getContentAsString());
-            String vehicleId = json.get("id").asText();
-
-            // Act 1
-            // First activation should succeed because the vehicle is inactive.
-            mockMvc.perform(post("/api/cars/{id}/activate", vehicleId))
-                    .andExpect(status().isOk());
-
-            // Act 2 + Assert
-            // Second activation should fail because the vehicle is already active.
-            // In the current project, VehicleAlreadyActiveException is mapped to 400 Bad Request.
-            mockMvc.perform(post("/api/cars/{id}/activate", vehicleId))
-                    .andExpect(status().isBadRequest());
-        }
+        mockMvc.perform(get("/api/properties/{id}", id))
+                .andExpect(status().isNotFound());
     }
+}

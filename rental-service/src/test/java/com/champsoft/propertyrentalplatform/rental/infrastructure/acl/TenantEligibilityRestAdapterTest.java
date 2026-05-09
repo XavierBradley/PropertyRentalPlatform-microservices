@@ -1,7 +1,6 @@
 package com.champsoft.propertyrentalplatform.rental.infrastructure.acl;
 
-
-import com.champsoft.vrms.registration.application.exception.CrossContextValidationException;
+import com.champsoft.propertyrentalplatform.rental.application.exception.CrossContextValidationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +14,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.http.HttpMethod.GET;
@@ -23,98 +24,105 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-    // @RestClientTest → loads ONLY the REST client layer
-// We are testing the Adapter (HTTP client), NOT the full application
-    @RestClientTest(AgentEligibilityRestAdapter.class)
+@RestClientTest(TenantEligibilityRestAdapter.class)
+@Import(TenantEligibilityRestAdapterTest.TestRestTemplateConfig.class)
+@TestPropertySource(properties = {
+        "services.tenants.base-url=http://localhost:9993"
+})
+class TenantEligibilityRestAdapterTest {
 
-// Import custom configuration for RestTemplate
-    @Import(AgentEligibilityRestAdapterTest.TestRestTemplateConfig.class)
+    @Autowired
+    private MockRestServiceServer mockServer;
 
-// Override base URL for agents-service in test environment
-    @TestPropertySource(properties = {
-            "services.agents.base-url=http://localhost:9993"
-    })
-    public class TenantEligibilityRestAdapterTest {
+    @Autowired
+    private TenantEligibilityRestAdapter adapter;
 
-        // Mock HTTP server → simulates the external agents-service
-        @Autowired
-        private MockRestServiceServer mockServer;
+    @Test
+    @DisplayName("should return true when tenant is eligible")
+    void shouldReturnTrueWhenTenantIsEligible() {
 
-        // Real adapter under test
-        @Autowired
-        private AgentEligibilityRestAdapter adapter;
+        UUID tenantId = UUID.randomUUID();
 
-        @Test
-        @DisplayName("Should return true when agent is eligible")
-        void shouldReturnTrueWhenAgentIsEligible() {
+        mockServer.expect(
+                        requestTo(
+                                "http://localhost:9993/api/tenants/"
+                                        + tenantId
+                                        + "/eligibility"
+                        )
+                )
+                .andExpect(method(GET))
+                .andRespond(
+                        withSuccess(
+                                "true",
+                                MediaType.APPLICATION_JSON
+                        )
+                );
 
-            // ------------------- Arrange -------------------
-            // Expect a GET request to agents-service eligibility endpoint
-            mockServer.expect(requestTo("http://localhost:9993/api/agents/agent-1/eligibility"))
-                    .andExpect(method(GET))
+        boolean result = adapter.isEligible(tenantId);
 
-                    // Simulate HTTP 200 response with body "true"
-                    .andRespond(withSuccess("true", MediaType.APPLICATION_JSON));
+        assertThat(result).isTrue();
 
-            // ------------------- Act -------------------
-            boolean result = adapter.isEligible("agent-1");
+        mockServer.verify();
+    }
 
-            // ------------------- Assert -------------------
-            // Adapter should correctly parse "true"
-            assertThat(result).isTrue();
+    @Test
+    @DisplayName("should return false when tenant is not eligible")
+    void shouldReturnFalseWhenTenantIsNotEligible() {
 
-            // Verify HTTP interaction happened as expected
-            mockServer.verify();
-        }
+        UUID tenantId = UUID.randomUUID();
 
-        @Test
-        @DisplayName("Should return false when agent is not eligible")
-        void shouldReturnFalseWhenAgentIsNotEligible() {
+        mockServer.expect(
+                        requestTo(
+                                "http://localhost:9993/api/tenants/"
+                                        + tenantId
+                                        + "/eligibility"
+                        )
+                )
+                .andExpect(method(GET))
+                .andRespond(
+                        withSuccess(
+                                "false",
+                                MediaType.APPLICATION_JSON
+                        )
+                );
 
-            // ------------------- Arrange -------------------
-            mockServer.expect(requestTo("http://localhost:9993/api/agents/agent-2/eligibility"))
-                    .andExpect(method(GET))
+        boolean result = adapter.isEligible(tenantId);
 
-                    // Simulate HTTP 200 response with "false"
-                    .andRespond(withSuccess("false", MediaType.APPLICATION_JSON));
+        assertThat(result).isFalse();
 
-            // ------------------- Act -------------------
-            boolean result = adapter.isEligible("agent-2");
+        mockServer.verify();
+    }
 
-            // ------------------- Assert -------------------
-            assertThat(result).isFalse();
-            mockServer.verify();
-        }
+    @Test
+    @DisplayName("should throw exception when tenants-service fails")
+    void shouldThrowExceptionWhenTenantsServiceFails() {
 
-        @Test
-        @DisplayName("Should throw exception when agents-service returns server error")
-        void shouldThrowExceptionWhenAgentsServiceReturnsServerError() {
+        UUID tenantId = UUID.randomUUID();
 
-            // ------------------- Arrange -------------------
-            mockServer.expect(requestTo("http://localhost:9993/api/agents/agent-3/eligibility"))
-                    .andExpect(method(GET))
+        mockServer.expect(
+                        requestTo(
+                                "http://localhost:9993/api/tenants/"
+                                        + tenantId
+                                        + "/eligibility"
+                        )
+                )
+                .andExpect(method(GET))
+                .andRespond(withServerError());
 
-                    // Simulate HTTP 500 error from external service
-                    .andRespond(withServerError());
+        assertThrows(
+                CrossContextValidationException.class,
+                () -> adapter.isEligible(tenantId)
+        );
 
-            // ------------------- Act + Assert -------------------
-            // Adapter should convert HTTP error into domain/application exception
-            assertThrows(CrossContextValidationException.class,
-                    () -> adapter.isEligible("agent-3"));
+        mockServer.verify();
+    }
 
-            // Verify interaction
-            mockServer.verify();
-        }
+    @TestConfiguration
+    static class TestRestTemplateConfig {
 
-        // Test-specific configuration
-        // Provides RestTemplate bean required by the adapter
-        @TestConfiguration
-        static class TestRestTemplateConfig {
-
-            @Bean
-            RestTemplate restTemplate(RestTemplateBuilder builder) {
-                // Build RestTemplate used by adapter
-                return builder.build();
-            }
+        @Bean
+        RestTemplate restTemplate(RestTemplateBuilder builder) {
+            return builder.build();
         }
     }
+}

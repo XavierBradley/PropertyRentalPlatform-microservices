@@ -1,6 +1,5 @@
 package com.champsoft.propertyrentalplatform.property.application.service;
 
-import aQute.bnd.annotation.metatype.Meta;
 import com.champsoft.propertyrentalplatform.property.application.exception.DuplicateAddressException;
 import com.champsoft.propertyrentalplatform.property.application.exception.PropertyNotFoundException;
 import com.champsoft.propertyrentalplatform.property.application.port.out.PropertyRepositoryPort;

@@ -1,6 +1,5 @@
 package com.champsoft.propertyrentalplatform.tenant.infrastructure.persistence;
 
-import com.champsoft.propertyrentalplatform.tenant.domain.model.CreditScore;
 import jakarta.persistence.*;
 
 import java.util.UUID;

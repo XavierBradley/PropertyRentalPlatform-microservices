@@ -1,50 +1,62 @@
 package com.champsoft.propertyrentalplatform.property.domain.model;
 
 import com.champsoft.propertyrentalplatform.property.domain.exception.InvalidAddressException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-// Domain test → validation rules only
 class AddressTest {
 
     @Test
+    @DisplayName("Should create valid address")
     void shouldCreateValidAddress() {
 
-        // ------------------- Act -------------------
-        Address address = new Address("123 Maple St, Montreal");
+        Address address = new Address("123 Main Street");
 
-        // ------------------- Assert -------------------
-        assertThat(address.value()).isEqualTo("123 Maple St, Montreal");
+        assertThat(address.value())
+                .isEqualTo("123 Main Street");
     }
 
     @Test
-    void shouldTrimAddressValue() {
+    @DisplayName("Should trim address")
+    void shouldTrimAddress() {
 
-        // ------------------- Act -------------------
-        Address address = new Address("   123 Maple St, Montreal   ");
+        Address address = new Address("  123 Main Street  ");
 
-        // ------------------- Assert -------------------
-        assertThat(address.value()).isEqualTo("123 Maple St, Montreal");
+        assertThat(address.value())
+                .isEqualTo("123 Main Street");
     }
 
     @Test
-    void shouldRejectNullAddress() {
+    @DisplayName("Should throw when address is null")
+    void shouldThrowWhenAddressIsNull() {
 
-        // ------------------- Assert -------------------
-        assertThatThrownBy(() -> new Address(null))
-                .isInstanceOf(InvalidAddressException.class);
+        assertThrows(
+                InvalidAddressException.class,
+                () -> new Address(null)
+        );
     }
 
     @Test
-    void shouldRejectTooLongAddress() {
+    @DisplayName("Should convert blank address to null")
+    void shouldConvertBlankAddressToNull() {
 
-        // ------------------- Arrange -------------------
+        Address address = new Address("   ");
+
+        assertThat(address.value()).isNull();
+    }
+
+    @Test
+    @DisplayName("Should throw when address exceeds max length")
+    void shouldThrowWhenAddressExceedsMaxLength() {
+
         String longAddress = "A".repeat(201);
 
-        // ------------------- Assert -------------------
-        assertThatThrownBy(() -> new Address(longAddress))
-                .isInstanceOf(InvalidAddressException.class);
+        assertThrows(
+                InvalidAddressException.class,
+                () -> new Address(longAddress)
+        );
     }
 }

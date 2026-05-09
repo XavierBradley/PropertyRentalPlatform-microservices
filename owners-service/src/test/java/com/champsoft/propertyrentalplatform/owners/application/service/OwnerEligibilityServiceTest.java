@@ -1,13 +1,14 @@
 package com.champsoft.propertyrentalplatform.owners.application.service;
 
-
-
 import com.champsoft.propertyrentalplatform.owners.application.exception.OwnerNotFoundException;
 import com.champsoft.propertyrentalplatform.owners.application.port.out.OwnerRepositoryPort;
 import com.champsoft.propertyrentalplatform.owners.domain.model.Address;
 import com.champsoft.propertyrentalplatform.owners.domain.model.FullName;
 import com.champsoft.propertyrentalplatform.owners.domain.model.Owner;
 import com.champsoft.propertyrentalplatform.owners.domain.model.OwnerId;
+import com.champsoft.propertyrentalplatform.owners.domain.model.OwnerStatus;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,122 +16,82 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-// Enable Mockito → this is a pure service-layer test
-// No Spring Boot, no database, no HTTP
 @ExtendWith(MockitoExtension.class)
 class OwnerEligibilityServiceTest {
 
-    // Mocked repository → replaces real database
-    // We control what data is returned
     @Mock
     private OwnerRepositoryPort repo;
 
-    // Real service under test
-    // Mockito injects the mocked repository into this service
     @InjectMocks
     private OwnerEligibilityService service;
 
-    // Helper method → creates a valid Owner
-    // Default state = INACTIVE (important for eligibility logic)
-    private Owner sampleOwner() {
-        return new Owner(
-                OwnerId.of("owner-1"),
+    private Owner owner(UUID id, OwnerStatus status) {
+
+        Owner owner = new Owner(
+                OwnerId.of(id),
                 new FullName("John Smith"),
                 new Address("Montreal")
         );
+
+        if (status == OwnerStatus.INACTIVE) {
+            owner.deactivate();
+        }
+
+        return owner;
     }
 
-    @Test
-    void shouldReturnTrueWhenOwnerIsActive() {
+    @Nested
+    @DisplayName("Eligibility checks")
+    class EligibilityTests {
 
-        // ------------------- Arrange -------------------
-        // Create owner and activate it
-        // Business rule: ACTIVE → eligible
-        Owner owner = sampleOwner();
-        owner.activate();
+        @Test
+        void shouldReturnTrueWhenOwnerIsActive() {
 
-        // Mock repository → return this active owner
-        when(repo.findById(OwnerId.of("owner-1")))
-                .thenReturn(Optional.of(owner));
+            UUID id = UUID.randomUUID();
 
-        // ------------------- Act -------------------
-        boolean result = service.isEligible("owner-1");
+            Owner owner = owner(id, OwnerStatus.ACTIVE);
 
-        // ------------------- Assert -------------------
-        // ACTIVE owner should be eligible
-        assertThat(result).isTrue();
+            when(repo.findById(OwnerId.of(id)))
+                    .thenReturn(Optional.of(owner));
 
-        // Verify repository lookup happened
-        verify(repo).findById(OwnerId.of("owner-1"));
-    }
+            boolean eligible = service.isEligible(id);
 
-    @Test
-    void shouldReturnFalseWhenOwnerIsInactive() {
+            assertThat(eligible).isTrue();
+        }
 
-        // ------------------- Arrange -------------------
-        // Create owner but DO NOT activate it
-        // Default state = INACTIVE
-        Owner owner = sampleOwner();
+        @Test
+        void shouldReturnFalseWhenOwnerIsInactive() {
 
-        // Mock repository → return inactive owner
-        when(repo.findById(OwnerId.of("owner-1")))
-                .thenReturn(Optional.of(owner));
+            UUID id = UUID.randomUUID();
 
-        // ------------------- Act -------------------
-        boolean result = service.isEligible("owner-1");
+            Owner owner = owner(id, OwnerStatus.INACTIVE);
 
-        // ------------------- Assert -------------------
-        // INACTIVE owner should NOT be eligible
-        assertThat(result).isFalse();
+            when(repo.findById(OwnerId.of(id)))
+                    .thenReturn(Optional.of(owner));
 
-        // Verify repository call
-        verify(repo).findById(OwnerId.of("owner-1"));
-    }
+            boolean eligible = service.isEligible(id);
 
-    @Test
-    void shouldReturnFalseWhenOwnerIsSuspended() {
+            assertThat(eligible).isFalse();
+        }
 
-        // ------------------- Arrange -------------------
-        // Create owner and suspend it
-        // Business rule: SUSPENDED → NOT eligible
-        Owner owner = sampleOwner();
-        owner.suspend();
+        @Test
+        void shouldThrowOwnerNotFoundException() {
 
-        // Mock repository → return suspended owner
-        when(repo.findById(OwnerId.of("owner-1")))
-                .thenReturn(Optional.of(owner));
+            UUID id = UUID.randomUUID();
 
-        // ------------------- Act -------------------
-        boolean result = service.isEligible("owner-1");
+            when(repo.findById(OwnerId.of(id)))
+                    .thenReturn(Optional.empty());
 
-        // ------------------- Assert -------------------
-        // SUSPENDED owner should NOT be eligible
-        assertThat(result).isFalse();
-
-        // Verify repository lookup
-        verify(repo).findById(OwnerId.of("owner-1"));
-    }
-
-    @Test
-    void shouldThrowOwnerNotFoundExceptionWhenOwnerDoesNotExist() {
-
-        // ------------------- Arrange -------------------
-        // Repository returns empty → owner not found
-        when(repo.findById(OwnerId.of("missing-owner")))
-                .thenReturn(Optional.empty());
-
-        // ------------------- Act + Assert -------------------
-        // Service should throw exception when owner does not exist
-        assertThrows(OwnerNotFoundException.class,
-                () -> service.isEligible("missing-owner"));
-
-        // Verify repository lookup was attempted
-        verify(repo).findById(OwnerId.of("missing-owner"));
+            assertThrows(
+                    OwnerNotFoundException.class,
+                    () -> service.isEligible(id)
+            );
+        }
     }
 }

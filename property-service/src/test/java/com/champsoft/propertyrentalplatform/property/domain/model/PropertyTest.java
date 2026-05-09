@@ -1,73 +1,102 @@
 package com.champsoft.propertyrentalplatform.property.domain.model;
 
 import com.champsoft.propertyrentalplatform.property.domain.exception.PropertyAlreadyBeingRentedException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-// Domain test → aggregate business rules
 class PropertyTest {
 
-    private Property validProperty() {
+    private Property property() {
+
         return new Property(
                 PropertyId.newId(),
-                new PropertyTax(0.015),
-                new Address("123 Maple St, Montreal")
+                new PropertyTax(0.01),
+                new Address("123 Main Street")
         );
     }
 
     @Test
-    void shouldCreateAvailablePropertyByDefault() {
+    @DisplayName("Should create available property")
+    void shouldCreateAvailableProperty() {
 
-        // ------------------- Arrange -------------------
-        Property property = validProperty();
+        Property property = property();
 
-        // ------------------- Assert -------------------
-        assertThat(property.status()).isEqualTo(PropertyStatus.AVAILABLE);
-        assertThat(property.isEligibleToBeRented()).isTrue();
+        assertThat(property.status())
+                .isEqualTo(PropertyStatus.AVAILABLE);
+
+        assertThat(property.tax().value())
+                .isEqualTo(0.01);
+
+        assertThat(property.address().value())
+                .isEqualTo("123 Main Street");
     }
 
     @Test
-    void shouldUpdatePropertyDetails() {
+    @DisplayName("Should update property")
+    void shouldUpdateProperty() {
 
-        // ------------------- Arrange -------------------
-        Property property = validProperty();
+        Property property = property();
 
-        // ------------------- Act -------------------
         property.update(
                 new PropertyTax(0.02),
-                new Address("456 Queen St, Toronto")
+                new Address("456 Park Avenue")
         );
 
-        // ------------------- Assert -------------------
-        assertThat(property.tax().value()).isEqualTo(0.02);
-        assertThat(property.address().value()).isEqualTo("456 Queen St, Toronto");
+        assertThat(property.tax().value())
+                .isEqualTo(0.02);
+
+        assertThat(property.address().value())
+                .isEqualTo("456 Park Avenue");
     }
 
     @Test
-    void shouldMarkPropertyAsRented() {
+    @DisplayName("Should rent property")
+    void shouldRentProperty() {
 
-        // ------------------- Arrange -------------------
-        Property property = validProperty();
+        Property property = property();
 
-        // ------------------- Act -------------------
         property.rent();
 
-        // ------------------- Assert -------------------
-        assertThat(property.status()).isEqualTo(PropertyStatus.UNAVAILABLE);
-        assertThat(property.isEligibleToBeRented()).isFalse();
+        assertThat(property.status())
+                .isEqualTo(PropertyStatus.UNAVAILABLE);
     }
 
     @Test
-    void shouldNotAllowRentingAlreadyUnavailableProperty() {
+    @DisplayName("Should throw when property already rented")
+    void shouldThrowWhenPropertyAlreadyRented() {
 
-        // ------------------- Arrange -------------------
-        Property property = validProperty();
+        Property property = property();
+
         property.rent();
 
-        // ------------------- Assert -------------------
-        assertThatThrownBy(property::rent)
-                .isInstanceOf(PropertyAlreadyBeingRentedException.class);
+        assertThrows(
+                PropertyAlreadyBeingRentedException.class,
+                property::rent
+        );
+    }
+
+    @Test
+    @DisplayName("Should be eligible when available")
+    void shouldBeEligibleWhenAvailable() {
+
+        Property property = property();
+
+        assertThat(property.isEligibleToBeRented())
+                .isTrue();
+    }
+
+    @Test
+    @DisplayName("Should not be eligible when unavailable")
+    void shouldNotBeEligibleWhenUnavailable() {
+
+        Property property = property();
+
+        property.rent();
+
+        assertThat(property.isEligibleToBeRented())
+                .isFalse();
     }
 }

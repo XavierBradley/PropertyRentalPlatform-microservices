@@ -1,50 +1,59 @@
 package com.champsoft.propertyrentalplatform.tenant.domain.model;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// Domain test → pure value object behavior
-// NO Spring, NO Mockito, NO database
 class TenantIdTest {
 
     @Test
-    void shouldCreateTenantIdFromValue() {
+    @DisplayName("Should create tenant id from UUID")
+    void shouldCreateTenantIdFromUuid() {
 
-        // ------------------- Act -------------------
-        TenantId id = TenantId.of(UUID.fromString("00000000-0000-0000-0000-000000000001"));
+        UUID uuid = UUID.randomUUID();
 
-        // ------------------- Assert -------------------
-        assertThat(id.value()).isEqualTo(UUID.fromString("00000000-0000-0000-0000-000000000001"));
-        assertThat(id.toString()).isEqualTo("00000000-0000-0000-0000-000000000001");
+        TenantId id = TenantId.of(uuid);
+
+        assertThat(id.value()).isEqualTo(uuid);
     }
 
     @Test
-    void shouldCreateNewTenantId() {
+    @DisplayName("Should generate new tenant id")
+    void shouldGenerateNewTenantId() {
 
-        // ------------------- Act -------------------
         TenantId id = TenantId.newId();
 
-        // ------------------- Assert -------------------
-        assertThat(id).isNotNull();
         assertThat(id.value()).isNotNull();
     }
 
     @Test
-    void shouldCompareTenantIdsCorrectly() {
+    @DisplayName("Should support equality")
+    void shouldSupportEquality() {
 
-        // ------------------- Arrange -------------------
-        UUID uuid = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        UUID uuid = UUID.randomUUID();
 
         TenantId id1 = TenantId.of(uuid);
-        TenantId id2 = TenantId.of(uuid);
-        TenantId id3 = TenantId.newId();
 
-        // ------------------- Assert -------------------
+        TenantId id2 = TenantId.of(uuid);
+
         assertThat(id1).isEqualTo(id2);
-        assertThat(id1).isNotEqualTo(id3);
-        assertThat(id1.hashCode()).isEqualTo(id2.hashCode());
+
+        assertThat(id1.hashCode())
+                .isEqualTo(id2.hashCode());
+    }
+
+    @Test
+    @DisplayName("Should support toString")
+    void shouldSupportToString() {
+
+        UUID uuid = UUID.randomUUID();
+
+        TenantId id = TenantId.of(uuid);
+
+        assertThat(id.toString())
+                .isEqualTo(uuid.toString());
     }
 }

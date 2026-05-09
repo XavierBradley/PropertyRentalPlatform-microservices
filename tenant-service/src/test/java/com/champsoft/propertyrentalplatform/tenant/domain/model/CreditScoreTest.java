@@ -1,39 +1,39 @@
 package com.champsoft.propertyrentalplatform.tenant.domain.model;
 
 import com.champsoft.propertyrentalplatform.tenant.domain.exception.InvalidCreditScoreException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-// Domain test → business rule validation
 class CreditScoreTest {
 
     @Test
+    @DisplayName("Should create valid credit score")
     void shouldCreateValidCreditScore() {
 
-        // ------------------- Act -------------------
         CreditScore score = new CreditScore(700);
 
-        // ------------------- Assert -------------------
         assertThat(score.value()).isEqualTo(700);
     }
 
     @Test
-    void shouldRejectTooLowCreditScore() {
+    @DisplayName("Should allow minimum score")
+    void shouldAllowMinimumScore() {
 
-        // ------------------- Assert -------------------
-        assertThatThrownBy(() -> new CreditScore(299))
-                .isInstanceOf(InvalidCreditScoreException.class);
+        CreditScore score = new CreditScore(300);
+
+        assertThat(score.value()).isEqualTo(300);
     }
 
     @Test
-    void shouldAllowMinimumValidCreditScore() {
+    @DisplayName("Should throw when score is below minimum")
+    void shouldThrowWhenScoreIsBelowMinimum() {
 
-        // ------------------- Act -------------------
-        CreditScore score = new CreditScore(300);
-
-        // ------------------- Assert -------------------
-        assertThat(score.value()).isEqualTo(300);
+        assertThrows(
+                InvalidCreditScoreException.class,
+                () -> new CreditScore(299)
+        );
     }
 }

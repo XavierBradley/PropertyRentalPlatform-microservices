@@ -1,48 +1,60 @@
 package com.champsoft.propertyrentalplatform.property.domain.model;
 
 import com.champsoft.propertyrentalplatform.property.domain.exception.InvalidPropertyTaxException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-// Domain test → business rule validation
 class PropertyTaxTest {
 
     @Test
+    @DisplayName("Should create valid property tax")
     void shouldCreateValidPropertyTax() {
 
-        // ------------------- Act -------------------
-        PropertyTax tax = new PropertyTax(0.015);
+        PropertyTax tax = new PropertyTax(0.01);
 
-        // ------------------- Assert -------------------
-        assertThat(tax.value()).isEqualTo(0.015);
+        assertThat(tax.value()).isEqualTo(0.01);
     }
 
     @Test
-    void shouldRejectZeroOrNegativeTax() {
+    @DisplayName("Should throw when tax is zero")
+    void shouldThrowWhenTaxIsZero() {
 
-        // ------------------- Assert -------------------
-        assertThatThrownBy(() -> new PropertyTax(0))
-                .isInstanceOf(InvalidPropertyTaxException.class);
-
-        assertThatThrownBy(() -> new PropertyTax(-0.01))
-                .isInstanceOf(InvalidPropertyTaxException.class);
+        assertThrows(
+                InvalidPropertyTaxException.class,
+                () -> new PropertyTax(0)
+        );
     }
 
     @Test
-    void shouldRejectTaxBelowMinimumThreshold() {
+    @DisplayName("Should throw when tax is negative")
+    void shouldThrowWhenTaxIsNegative() {
 
-        // ------------------- Assert -------------------
-        assertThatThrownBy(() -> new PropertyTax(0.002))
-                .isInstanceOf(InvalidPropertyTaxException.class);
+        assertThrows(
+                InvalidPropertyTaxException.class,
+                () -> new PropertyTax(-0.01)
+        );
     }
 
     @Test
-    void shouldRejectTaxAboveMaximumThreshold() {
+    @DisplayName("Should throw when tax is below minimum")
+    void shouldThrowWhenTaxIsBelowMinimum() {
 
-        // ------------------- Assert -------------------
-        assertThatThrownBy(() -> new PropertyTax(0.03))
-                .isInstanceOf(InvalidPropertyTaxException.class);
+        assertThrows(
+                InvalidPropertyTaxException.class,
+                () -> new PropertyTax(0.002)
+        );
+    }
+
+    @Test
+    @DisplayName("Should throw when tax exceeds maximum")
+    void shouldThrowWhenTaxExceedsMaximum() {
+
+        assertThrows(
+                InvalidPropertyTaxException.class,
+                () -> new PropertyTax(0.03)
+        );
     }
 }

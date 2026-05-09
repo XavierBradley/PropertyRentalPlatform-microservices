@@ -1,19 +1,33 @@
 package com.champsoft.propertyrentalplatform.rental.domain.model;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-// Domain test → validation rules
 class TenantRefTest {
 
     @Test
-    void shouldRejectNullTenantRef() {
+    @DisplayName("Should create tenant ref")
+    void shouldCreateTenantRef() {
 
-        // ------------------- Assert -------------------
-        assertThatThrownBy(() -> new TenantRef(null))
-                .isInstanceOf(IllegalArgumentException.class);
+        UUID id = UUID.randomUUID();
+
+        TenantRef ref = new TenantRef(id);
+
+        assertThat(ref.value()).isEqualTo(id);
+    }
+
+    @Test
+    @DisplayName("Should throw when tenant ref is null")
+    void shouldThrowWhenTenantRefIsNull() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new TenantRef(null)
+        );
     }
 }

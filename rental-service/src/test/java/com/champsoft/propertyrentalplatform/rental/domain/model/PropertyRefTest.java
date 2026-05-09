@@ -1,30 +1,33 @@
 package com.champsoft.propertyrentalplatform.rental.domain.model;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-// Domain test → value object validation
 class PropertyRefTest {
 
     @Test
-    void shouldCreateValidPropertyRef() {
+    @DisplayName("Should create property ref")
+    void shouldCreatePropertyRef() {
 
-        // ------------------- Act -------------------
-        PropertyRef ref = new PropertyRef(UUID.randomUUID());
+        UUID id = UUID.randomUUID();
 
-        // ------------------- Assert -------------------
-        assertThat(ref.value()).isNotNull();
+        PropertyRef ref = new PropertyRef(id);
+
+        assertThat(ref.value()).isEqualTo(id);
     }
 
     @Test
-    void shouldRejectNullPropertyRef() {
+    @DisplayName("Should throw when property ref is null")
+    void shouldThrowWhenPropertyRefIsNull() {
 
-        // ------------------- Assert -------------------
-        assertThatThrownBy(() -> new PropertyRef(null))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new PropertyRef(null)
+        );
     }
 }

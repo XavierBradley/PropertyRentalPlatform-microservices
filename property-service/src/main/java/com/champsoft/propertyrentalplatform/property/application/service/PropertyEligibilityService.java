@@ -2,6 +2,7 @@ package com.champsoft.propertyrentalplatform.property.application.service;
 
 import com.champsoft.propertyrentalplatform.property.application.exception.PropertyNotFoundException;
 import com.champsoft.propertyrentalplatform.property.application.port.out.PropertyRepositoryPort;
+import com.champsoft.propertyrentalplatform.property.domain.model.Property;
 import com.champsoft.propertyrentalplatform.property.domain.model.PropertyId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +21,7 @@ public class PropertyEligibilityService {
     @Transactional(readOnly = true)
     public boolean isEligible(UUID propertyId) {
         return repo.findById(PropertyId.of(propertyId))
-                .map(v -> v.isEligibleToBeRented())
+                .map(Property::isEligibleToBeRented)
                 .orElseThrow(() -> new PropertyNotFoundException("Property not found: " + propertyId));
     }
 }

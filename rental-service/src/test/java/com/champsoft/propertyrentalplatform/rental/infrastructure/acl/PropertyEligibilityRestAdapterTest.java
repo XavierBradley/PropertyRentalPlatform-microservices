@@ -1,7 +1,6 @@
 package com.champsoft.propertyrentalplatform.rental.infrastructure.acl;
 
-
-import com.champsoft.vrms.registration.application.exception.CrossContextValidationException;
+import com.champsoft.propertyrentalplatform.rental.application.exception.CrossContextValidationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +14,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.http.HttpMethod.GET;
@@ -23,97 +24,105 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-    // @RestClientTest → loads ONLY REST client layer (NOT full Spring Boot)
-// Used for testing HTTP clients like RestTemplate adapters
-    @RestClientTest(VehicleEligibilityRestAdapter.class)
+@RestClientTest(PropertyEligibilityRestAdapter.class)
+@Import(PropertyEligibilityRestAdapterTest.TestRestTemplateConfig.class)
+@TestPropertySource(properties = {
+        "services.properties.base-url=http://localhost:9991"
+})
+class PropertyEligibilityRestAdapterTest {
 
-// Import custom configuration (RestTemplate bean)
-    @Import(VehicleEligibilityRestAdapterTest.TestRestTemplateConfig.class)
+    @Autowired
+    private MockRestServiceServer mockServer;
 
-// Override properties for test environment
-    @TestPropertySource(properties = {
-            "services.cars.base-url=http://localhost:9991"
-    })
-    public class PropertyEligibilityRestAdapterTest {
+    @Autowired
+    private PropertyEligibilityRestAdapter adapter;
 
-        // Mock HTTP server → simulates external microservice (cars-service)
-        @Autowired
-        private MockRestServiceServer mockServer;
+    @Test
+    @DisplayName("should return true when property is eligible")
+    void shouldReturnTrueWhenPropertyIsEligible() {
 
-        // Adapter under test (real object)
-        @Autowired
-        private VehicleEligibilityRestAdapter adapter;
+        UUID propertyId = UUID.randomUUID();
 
-        @Test
-        @DisplayName("Should return true when vehicle is eligible")
-        void shouldReturnTrueWhenVehicleIsEligible() {
+        mockServer.expect(
+                        requestTo(
+                                "http://localhost:9991/api/properties/"
+                                        + propertyId
+                                        + "/eligibility"
+                        )
+                )
+                .andExpect(method(GET))
+                .andRespond(
+                        withSuccess(
+                                "true",
+                                MediaType.APPLICATION_JSON
+                        )
+                );
 
-            // ------------------- Arrange -------------------
-            // Expect a GET request to cars-service eligibility endpoint
-            mockServer.expect(requestTo("http://localhost:9991/api/cars/vehicle-1/eligibility"))
-                    .andExpect(method(GET))
+        boolean result = adapter.isEligible(propertyId);
 
-                    // Simulate HTTP 200 response with body "true"
-                    .andRespond(withSuccess("true", MediaType.APPLICATION_JSON));
+        assertThat(result).isTrue();
 
-            // ------------------- Act -------------------
-            boolean result = adapter.isEligible("vehicle-1");
+        mockServer.verify();
+    }
 
-            // ------------------- Assert -------------------
-            // Adapter should correctly parse response
-            assertThat(result).isTrue();
+    @Test
+    @DisplayName("should return false when property is not eligible")
+    void shouldReturnFalseWhenPropertyIsNotEligible() {
 
-            // Verify that expected HTTP call was executed
-            mockServer.verify();
-        }
+        UUID propertyId = UUID.randomUUID();
 
-        @Test
-        @DisplayName("Should return false when vehicle is not eligible")
-        void shouldReturnFalseWhenVehicleIsNotEligible() {
+        mockServer.expect(
+                        requestTo(
+                                "http://localhost:9991/api/properties/"
+                                        + propertyId
+                                        + "/eligibility"
+                        )
+                )
+                .andExpect(method(GET))
+                .andRespond(
+                        withSuccess(
+                                "false",
+                                MediaType.APPLICATION_JSON
+                        )
+                );
 
-            // ------------------- Arrange -------------------
-            mockServer.expect(requestTo("http://localhost:9991/api/cars/vehicle-2/eligibility"))
-                    .andExpect(method(GET))
+        boolean result = adapter.isEligible(propertyId);
 
-                    // Simulate HTTP 200 response with "false"
-                    .andRespond(withSuccess("false", MediaType.APPLICATION_JSON));
+        assertThat(result).isFalse();
 
-            // ------------------- Act -------------------
-            boolean result = adapter.isEligible("vehicle-2");
+        mockServer.verify();
+    }
 
-            // ------------------- Assert -------------------
-            assertThat(result).isFalse();
-            mockServer.verify();
-        }
+    @Test
+    @DisplayName("should throw exception when properties-service fails")
+    void shouldThrowExceptionWhenPropertiesServiceFails() {
 
-        @Test
-        @DisplayName("Should throw exception when cars-service returns server error")
-        void shouldThrowExceptionWhenCarsServiceReturnsServerError() {
+        UUID propertyId = UUID.randomUUID();
 
-            // ------------------- Arrange -------------------
-            mockServer.expect(requestTo("http://localhost:9991/api/cars/vehicle-3/eligibility"))
-                    .andExpect(method(GET))
+        mockServer.expect(
+                        requestTo(
+                                "http://localhost:9991/api/properties/"
+                                        + propertyId
+                                        + "/eligibility"
+                        )
+                )
+                .andExpect(method(GET))
+                .andRespond(withServerError());
 
-                    // Simulate HTTP 500 error
-                    .andRespond(withServerError());
+        assertThrows(
+                CrossContextValidationException.class,
+                () -> adapter.isEligible(propertyId)
+        );
 
-            // ------------------- Act + Assert -------------------
-            // Adapter should translate HTTP error into domain/application exception
-            assertThrows(CrossContextValidationException.class,
-                    () -> adapter.isEligible("vehicle-3"));
+        mockServer.verify();
+    }
 
-            mockServer.verify();
-        }
+    @TestConfiguration
+    static class TestRestTemplateConfig {
 
-        // Test-specific configuration
-        // Provides RestTemplate bean required by adapter
-        @TestConfiguration
-        static class TestRestTemplateConfig {
-
-            @Bean
-            RestTemplate restTemplate(RestTemplateBuilder builder) {
-                // Build RestTemplate used by adapter
-                return builder.build();
-            }
+        @Bean
+        RestTemplate restTemplate(RestTemplateBuilder builder) {
+            return builder.build();
         }
     }
+}

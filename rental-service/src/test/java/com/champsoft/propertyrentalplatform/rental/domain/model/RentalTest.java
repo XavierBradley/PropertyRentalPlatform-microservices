@@ -1,76 +1,95 @@
 package com.champsoft.propertyrentalplatform.rental.domain.model;
 
+import com.champsoft.propertyrentalplatform.rental.domain.exception.RentalNotActiveException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-// Domain test → aggregate behavior
 class RentalTest {
 
-    private Rental validRental() {
+    private Rental rental() {
+
         return new Rental(
                 RentalId.newId(),
                 new PropertyRef(UUID.randomUUID()),
                 new OwnerRef(UUID.randomUUID()),
                 new TenantRef(UUID.randomUUID()),
-                new Rent(1500.0),
-                new ExpiryDate(LocalDate.now().plusDays(30))
+                new Rent(1850.0),
+                new ExpiryDate(LocalDate.now().plusMonths(6))
         );
     }
 
     @Test
-    void shouldCreateActiveRentalByDefault() {
+    @DisplayName("Should create active rental")
+    void shouldCreateActiveRental() {
 
-        // ------------------- Arrange -------------------
-        Rental rental = validRental();
+        Rental rental = rental();
 
-        // ------------------- Assert -------------------
-        assertThat(rental.status()).isEqualTo(RentalStatus.ACTIVE);
-        assertThat(rental.rentValue()).isEqualTo(1500.0);
+        assertThat(rental.status())
+                .isEqualTo(RentalStatus.ACTIVE);
+
+        assertThat(rental.rent().amount())
+                .isEqualTo(1850.0);
     }
 
     @Test
+    @DisplayName("Should renew active rental")
     void shouldRenewActiveRental() {
 
-        // ------------------- Arrange -------------------
-        Rental rental = validRental();
+        Rental rental = rental();
 
-        // ------------------- Act -------------------
-        ExpiryDate newExpiry = new ExpiryDate(LocalDate.now().plusDays(60));
-        rental.renew(newExpiry);
+        LocalDate newExpiry = LocalDate.now().plusYears(1);
 
-        // ------------------- Assert -------------------
-        assertThat(rental.expiry().value()).isEqualTo(newExpiry.value());
+        rental.renew(new ExpiryDate(newExpiry));
+
+        assertThat(rental.expiry().value())
+                .isEqualTo(newExpiry);
     }
 
     @Test
-    void shouldNotRenewInactiveRental() {
-
-        // ------------------- Arrange -------------------
-        Rental rental = validRental();
-        rental.cancel();
-
-        // ------------------- Assert -------------------
-        assertThatThrownBy(() ->
-                rental.renew(new ExpiryDate(LocalDate.now().plusDays(10)))
-        ).isInstanceOf(RuntimeException.class)
-                .hasMessage("Rental not ACTIVE");
-    }
-
-    @Test
+    @DisplayName("Should cancel rental")
     void shouldCancelRental() {
 
-        // ------------------- Arrange -------------------
-        Rental rental = validRental();
+        Rental rental = rental();
 
-        // ------------------- Act -------------------
         rental.cancel();
 
-        // ------------------- Assert -------------------
-        assertThat(rental.status()).isEqualTo(RentalStatus.EXPIRED);
+        assertThat(rental.status())
+                .isEqualTo(RentalStatus.EXPIRED);
+    }
+
+    @Test
+    @DisplayName("Should throw when renewing expired rental")
+    void shouldThrowWhenRenewingExpiredRental() {
+
+        Rental rental = rental();
+
+        rental.cancel();
+
+        assertThrows(
+                RentalNotActiveException.class,
+                () -> rental.renew(
+                        new ExpiryDate(LocalDate.now().plusYears(1))
+                )
+        );
+    }
+
+    @Test
+    @DisplayName("Should throw when cancelling expired rental")
+    void shouldThrowWhenCancellingExpiredRental() {
+
+        Rental rental = rental();
+
+        rental.cancel();
+
+        assertThrows(
+                RentalNotActiveException.class,
+                rental::cancel
+        );
     }
 }

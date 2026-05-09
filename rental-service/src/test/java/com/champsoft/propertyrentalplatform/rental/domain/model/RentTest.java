@@ -1,37 +1,40 @@
 package com.champsoft.propertyrentalplatform.rental.domain.model;
 
 import com.champsoft.propertyrentalplatform.rental.domain.exception.InvalidRentException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-// Domain test → business rules
 class RentTest {
 
     @Test
+    @DisplayName("Should create valid rent")
     void shouldCreateValidRent() {
 
-        // ------------------- Act -------------------
-        Rent rent = new Rent(1500.0);
+        Rent rent = new Rent(1850.0);
 
-        // ------------------- Assert -------------------
-        assertThat(rent.amount()).isEqualTo(1500.0);
+        assertThat(rent.amount()).isEqualTo(1850.0);
     }
 
     @Test
-    void shouldRejectZeroRent() {
+    @DisplayName("Should throw when rent is zero")
+    void shouldThrowWhenRentIsZero() {
 
-        // ------------------- Assert -------------------
-        assertThatThrownBy(() -> new Rent(0))
-                .isInstanceOf(InvalidRentException.class);
+        assertThrows(
+                InvalidRentException.class,
+                () -> new Rent(0)
+        );
     }
 
     @Test
-    void shouldRejectNegativeRent() {
+    @DisplayName("Should throw when rent is negative")
+    void shouldThrowWhenRentIsNegative() {
 
-        // ------------------- Assert -------------------
-        assertThatThrownBy(() -> new Rent(-100))
-                .isInstanceOf(InvalidRentException.class);
+        assertThrows(
+                InvalidRentException.class,
+                () -> new Rent(-100)
+        );
     }
 }
