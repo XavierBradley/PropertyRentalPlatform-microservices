@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
@@ -25,7 +26,7 @@ public class PropertyEligibilityRestAdapter implements PropertyEligibilityPort {
 
     @Override
     public boolean isEligible(UUID propertyId) {
-        String url = propertiesBaseUrl + "api/properties/" + propertyId + "/eligibility";
+        String url = propertiesBaseUrl + "/api/properties/" + propertyId + "/eligibility";
 
         try {
             Boolean result = restTemplate.getForObject(url, Boolean.class);
@@ -40,6 +41,9 @@ public class PropertyEligibilityRestAdapter implements PropertyEligibilityPort {
         }catch (ResourceAccessException ex) {
 
             throw new CrossContextValidationException("Property service is unavailable");
+        }
+        catch (HttpServerErrorException ex) {
+            throw new CrossContextValidationException("Property service error: " + propertyId);
         }
     }
 }

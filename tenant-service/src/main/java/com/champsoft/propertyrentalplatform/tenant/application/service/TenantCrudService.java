@@ -22,16 +22,28 @@ public class TenantCrudService {
 
     @Transactional
     public Tenant create(String name, int score, String accountNumber, String ABA) {
-        var tenant = new Tenant(TenantId.newId(), name, new CreditScore(score), new BankDetails(accountNumber, ABA));
-        if (repo.existsByName(tenant.name())) {
-            throw new DuplicateTenantException("Tenant already exists by name: " + tenant.name());
-        }
 
-        if (!name.matches("[A-Za-z -]+")) {
+        String n = name == null ? "" : name.trim();
+
+        if (!n.matches("[A-Za-z -]+")) {
             throw new InvalidTenantNameException("Name must contain only letters");
         }
-        String n = name.trim();
-        if (n.length() < 2 || n.length() > 100) throw new InvalidTenantNameException("Tenant name length must be 2..100");
+
+        if (n.length() < 2 || n.length() > 100) {
+            throw new InvalidTenantNameException("Tenant name length must be 2..100");
+        }
+
+        if (repo.existsByName(n)) {
+            throw new DuplicateTenantException("Tenant already exists by name: " + n);
+        }
+
+        Tenant tenant = new Tenant(
+                TenantId.newId(),
+                n,
+                new CreditScore(score),
+                new BankDetails(accountNumber, ABA)
+        );
+
         return repo.save(tenant);
     }
 
@@ -42,20 +54,22 @@ public class TenantCrudService {
     }
 
     @Transactional(readOnly = true)
-    public List<Tenant> list() { return repo.findAll(); }
+    public List<Tenant> list() {
+        return repo.findAll();
+    }
 
     @Transactional
     public Tenant update(UUID id, String name, int score, String accountNumber, String ABA) {
-        var a = getById(id);
-        a.update(name, new CreditScore(score), new BankDetails(accountNumber, ABA));
-        return repo.save(a);
+        Tenant tenant = getById(id);
+        tenant.update(name, new CreditScore(score), new BankDetails(accountNumber, ABA));
+        return repo.save(tenant);
     }
 
     @Transactional
     public Tenant activate(UUID id) {
-        var a = getById(id);
-        a.activate();
-        return repo.save(a);
+        Tenant tenant = getById(id);
+        tenant.activate();
+        return repo.save(tenant);
     }
 
     @Transactional

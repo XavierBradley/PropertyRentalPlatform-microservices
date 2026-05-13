@@ -2,7 +2,9 @@ package com.champsoft.propertyrentalplatform.tenant.api.mapper;
 
 import com.champsoft.propertyrentalplatform.tenant.api.dto.TenantResponse;
 import com.champsoft.propertyrentalplatform.tenant.domain.model.Tenant;
+import org.springframework.stereotype.Component;
 
+@Component
 public class TenantApiMapper {
     public static TenantResponse toResponse(Tenant t) {
         return new TenantResponse(

@@ -6,6 +6,7 @@ import com.champsoft.propertyrentalplatform.owners.web.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.Instant;
 
@@ -27,8 +28,16 @@ public class OwnerExceptionHandler {
             InvalidAddressException.class,
             IllegalArgumentException.class
     })
+
     public ResponseEntity<ApiErrorResponse> badRequest(RuntimeException ex, HttpServletRequest req) {
         return build(HttpStatus.BAD_REQUEST, ex, req);
+    }
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDbConflict(
+            DataIntegrityViolationException ex,
+            HttpServletRequest req
+    ) {
+        return build(HttpStatus.CONFLICT, ex, req);
     }
 
     private ResponseEntity<ApiErrorResponse> build(HttpStatus status, Exception ex, HttpServletRequest req) {

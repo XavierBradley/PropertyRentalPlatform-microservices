@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 
-@RestControllerAdvice(assignableTypes = RentalController.class)
+@RestControllerAdvice
 public class RentalExceptionHandler {
 
     @ExceptionHandler(RentalNotFoundException.class)
@@ -28,6 +28,22 @@ public class RentalExceptionHandler {
             IllegalArgumentException.class
     })
     public ResponseEntity<ApiErrorResponse> badRequest(RuntimeException ex, HttpServletRequest req) {
+        return build(HttpStatus.BAD_REQUEST, ex, req);
+    }
+
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handleTypeMismatch(
+            Exception ex,
+            HttpServletRequest req
+    ) {
+        return build(HttpStatus.BAD_REQUEST, ex, req);
+    }
+
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiErrorResponse> handleValidation(
+            Exception ex,
+            HttpServletRequest req
+    ) {
         return build(HttpStatus.BAD_REQUEST, ex, req);
     }
 

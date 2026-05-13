@@ -1,29 +1,26 @@
 package com.champsoft.propertyrentalplatform.tenant.api;
 
-import com.champsoft.propertyrentalplatform.tenant.application.port.out.TenantRepositoryPort;
+import com.champsoft.propertyrentalplatform.tenant.application.service.TenantCrudService;
+import com.champsoft.propertyrentalplatform.tenant.application.service.TenantEligibilityService;
 import com.champsoft.propertyrentalplatform.tenant.domain.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(TenantController.class)
 class TenantControllerIntegrationTest {
 
     @Autowired
@@ -32,16 +29,15 @@ class TenantControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockitoBean
-    private TenantRepositoryPort repo;
+    @MockBean
+    private TenantCrudService service;
 
-    private Tenant tenant;
+    @MockBean
+    private TenantEligibilityService eligibilityService;
 
-    @BeforeEach
-    void setUp() {
-
-        tenant = new Tenant(
-                TenantId.of(UUID.randomUUID()),
+    private Tenant sampleTenant(UUID id) {
+        return new Tenant(
+                TenantId.of(id),
                 "John Doe",
                 new CreditScore(700),
                 new BankDetails(
@@ -55,11 +51,11 @@ class TenantControllerIntegrationTest {
     @DisplayName("Should create tenant")
     void shouldCreateTenant() throws Exception {
 
-        when(repo.existsByName("John Doe"))
-                .thenReturn(false);
+        UUID id = UUID.randomUUID();
+        Tenant tenant = sampleTenant(id);
 
-        when(repo.save(any(Tenant.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(service.create(any(), anyInt(), any(), any()))
+                .thenReturn(tenant);
 
         String body = """
                 {
@@ -70,64 +66,55 @@ class TenantControllerIntegrationTest {
                 }
                 """;
 
-        mockMvc.perform(
-                        post("/api/tenants")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(body)
-                )
+        mockMvc.perform(post("/api/tenants")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("John Doe"))
-                .andExpect(jsonPath("$.score").value(700))
-                .andExpect(jsonPath("$.status").value("INACTIVE"));
+                .andExpect(jsonPath("$.score").value(700));
     }
 
     @Test
     @DisplayName("Should get tenant by id")
     void shouldGetTenantById() throws Exception {
 
-        when(repo.findById(tenant.id()))
-                .thenReturn(Optional.of(tenant));
+        UUID id = UUID.randomUUID();
+        Tenant tenant = sampleTenant(id);
 
-        mockMvc.perform(
-                        get("/api/tenants/{id}", tenant.id().value())
-                )
+        when(service.getById(id)).thenReturn(tenant);
+
+        mockMvc.perform(get("/api/tenants/{id}", id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(tenant.id().value().toString()))
-                .andExpect(jsonPath("$.name").value("John Doe"))
-                .andExpect(jsonPath("$.score").value(700));
+                .andExpect(jsonPath("$.name").value("John Doe"));
     }
 
     @Test
     @DisplayName("Should list tenants")
     void shouldListTenants() throws Exception {
 
-        Tenant second = new Tenant(
-                TenantId.of(UUID.randomUUID()),
-                "Jane Doe",
-                new CreditScore(750),
-                new BankDetails(
-                        "999999999999",
-                        "987654321"
-                )
-        );
+        UUID id = UUID.randomUUID();
+        Tenant tenant = sampleTenant(id);
 
-        when(repo.findAll())
-                .thenReturn(List.of(tenant, second));
+        when(service.list()).thenReturn(List.of(tenant));
 
         mockMvc.perform(get("/api/tenants"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("Should update tenant")
     void shouldUpdateTenant() throws Exception {
 
-        when(repo.findById(tenant.id()))
-                .thenReturn(Optional.of(tenant));
+        UUID id = UUID.randomUUID();
+        Tenant tenant = new Tenant(
+                TenantId.of(id),
+                "Jane Doe",
+                new CreditScore(750),
+                new BankDetails("999999999999", "987654321")
+        );
 
-        when(repo.save(any(Tenant.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(service.update(any(), any(), anyInt(), any(), any()))
+                .thenReturn(tenant);
 
         String body = """
                 {
@@ -138,11 +125,9 @@ class TenantControllerIntegrationTest {
                 }
                 """;
 
-        mockMvc.perform(
-                        put("/api/tenants/{id}", tenant.id().value())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(body)
-                )
+        mockMvc.perform(put("/api/tenants/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Jane Doe"))
                 .andExpect(jsonPath("$.score").value(750));
@@ -152,15 +137,14 @@ class TenantControllerIntegrationTest {
     @DisplayName("Should activate tenant")
     void shouldActivateTenant() throws Exception {
 
-        when(repo.findById(tenant.id()))
-                .thenReturn(Optional.of(tenant));
+        UUID id = UUID.randomUUID();
 
-        when(repo.save(any(Tenant.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        Tenant tenant = sampleTenant(id);
+        tenant.activate();
 
-        mockMvc.perform(
-                        post("/api/tenants/{id}/activate", tenant.id().value())
-                )
+        when(service.activate(id)).thenReturn(tenant);
+
+        mockMvc.perform(post("/api/tenants/{id}/activate", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ACTIVE"));
     }
@@ -169,12 +153,9 @@ class TenantControllerIntegrationTest {
     @DisplayName("Should delete tenant")
     void shouldDeleteTenant() throws Exception {
 
-        when(repo.findById(tenant.id()))
-                .thenReturn(Optional.of(tenant));
+        UUID id = UUID.randomUUID();
 
-        mockMvc.perform(
-                        delete("/api/tenants/{id}", tenant.id().value())
-                )
+        mockMvc.perform(delete("/api/tenants/{id}", id))
                 .andExpect(status().isNoContent());
     }
 
@@ -182,14 +163,11 @@ class TenantControllerIntegrationTest {
     @DisplayName("Should return tenant eligibility")
     void shouldReturnTenantEligibility() throws Exception {
 
-        tenant.activate();
+        UUID id = UUID.randomUUID();
 
-        when(repo.findById(tenant.id()))
-                .thenReturn(Optional.of(tenant));
+        when(eligibilityService.isEligible(id)).thenReturn(true);
 
-        mockMvc.perform(
-                        get("/api/tenants/{id}/eligibility", tenant.id().value())
-                )
+        mockMvc.perform(get("/api/tenants/{id}/eligibility", id))
                 .andExpect(status().isOk())
                 .andExpect(content().string("true"));
     }

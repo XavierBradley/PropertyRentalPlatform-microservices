@@ -1,10 +1,11 @@
 package com.champsoft.propertyrentalplatform.tenant.infrastructure.persistence;
 
 import com.champsoft.propertyrentalplatform.tenant.domain.model.*;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @Import(JpaTenantRepositoryAdapter.class)
+@Transactional
 class TenantRepositoryIntegrationTest {
 
     @Autowired

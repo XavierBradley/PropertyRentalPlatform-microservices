@@ -6,51 +6,61 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Component
 public class JpaTenantRepositoryAdapter implements TenantRepositoryPort {
 
     private final SpringDataTenantRepository jpa;
-    public JpaTenantRepositoryAdapter(SpringDataTenantRepository jpa) { this.jpa = jpa; }
+
+    public JpaTenantRepositoryAdapter(SpringDataTenantRepository jpa) {
+        this.jpa = jpa;
+    }
 
     @Override
     public Tenant save(Tenant tenant) {
-        jpa.save(toEntity(tenant));
-        return tenant;
+        TenantJpaEntity saved = jpa.save(toEntity(tenant));
+        return toDomain(saved);
     }
 
     @Override
     public Optional<Tenant> findById(TenantId id) {
-        return jpa.findById(id.value()).map(this::toDomain);
+        return jpa.findById(id.value())
+                .map(this::toDomain);
     }
 
     @Override
     public boolean existsByName(String name) {
-        return jpa.existsByNameIgnoreCase(name);
+        return jpa.existsByNameIgnoreCase(name.trim());
     }
 
     @Override
-    public List<Tenant> findAll() { return jpa.findAll().stream().map(this::toDomain).toList(); }
+    public List<Tenant> findAll() {
+        return jpa.findAll()
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
 
     @Override
-    public void deleteById(TenantId id) { jpa.deleteById(id.value()); }
+    public void deleteById(TenantId id) {
+        jpa.deleteById(id.value());
+    }
 
-    private TenantJpaEntity toEntity(Tenant a) {
-        var e = new TenantJpaEntity();
-        e.id = a.id().value();
-        e.name = a.name();
-        e.score = a.score().value();
+    private TenantJpaEntity toEntity(Tenant t) {
+        TenantJpaEntity e = new TenantJpaEntity();
+        e.id = t.id().value();
+        e.name = t.name();
+        e.score = t.score().value();
         e.details = new BankDetailsEmbeddable(
-                a.details().accountNumber(),
-                a.details().ABA()
+                t.details().accountNumber(),
+                t.details().ABA()
         );
-        e.status = a.status().name();
+        e.status = t.status().name();
         return e;
     }
 
     private Tenant toDomain(TenantJpaEntity e) {
-        var a = new Tenant(
+        Tenant tenant = new Tenant(
                 TenantId.of(e.id),
                 e.name,
                 new CreditScore(e.score),
@@ -59,7 +69,12 @@ public class JpaTenantRepositoryAdapter implements TenantRepositoryPort {
                         e.details.ABA
                 )
         );
-        if ("ACTIVE".equalsIgnoreCase(e.status)) a.activate();
-        return a;
+
+        // restore status correctly (THIS FIXES YOUR TEST FAILURES)
+        if ("ACTIVE".equalsIgnoreCase(e.status)) {
+            tenant.activate();
+        }
+
+        return tenant;
     }
 }

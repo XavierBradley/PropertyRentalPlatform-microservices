@@ -1,106 +1,91 @@
 package com.champsoft.propertyrentalplatform.property.application.service;
 
-
-import com.champsoft.vrms.cars.application.exception.VehicleNotFoundException;
-import com.champsoft.vrms.cars.application.port.out.VehicleRepositoryPort;
-import com.champsoft.vrms.cars.domain.model.Vehicle;
-import com.champsoft.vrms.cars.domain.model.VehicleId;
-import com.champsoft.vrms.cars.domain.model.VehicleSpecs;
-import com.champsoft.vrms.cars.domain.model.Vin;
+import com.champsoft.propertyrentalplatform.property.application.exception.PropertyNotFoundException;
+import com.champsoft.propertyrentalplatform.property.application.port.out.PropertyRepositoryPort;
+import com.champsoft.propertyrentalplatform.property.domain.model.Address;
+import com.champsoft.propertyrentalplatform.property.domain.model.Property;
+import com.champsoft.propertyrentalplatform.property.domain.model.PropertyId;
+import com.champsoft.propertyrentalplatform.property.domain.model.PropertyTax;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-    // Service-layer unit test → tests application logic only
-// NO Spring Boot context, NO real database
-// Mockito is used to fake the repository dependency
-    @ExtendWith(MockitoExtension.class)
-    public class PropertyEligibilityServiceTest {
+class PropertyEligibilityServiceTest {
 
-        // Mock repository:
-        // This fake object replaces the real repository/database.
-        @Mock
-        private VehicleRepositoryPort repo;
+    private PropertyRepositoryPort repo;
 
-        // InjectMocks:
-        // Mockito creates VehicleEligibilityService and injects the mocked repo into it.
-        @InjectMocks
-        private VehicleEligibilityService service;
+    private PropertyEligibilityService service;
 
-        @Test
-        void shouldReturnTrueWhenVehicleIsActive() {
+    @BeforeEach
+    void setUp() {
 
-            // ------------------- Arrange -------------------
-            // Create a sample vehicle.
-            Vehicle vehicle = sampleVehicle();
+        repo = mock(PropertyRepositoryPort.class);
 
-            // Activate the vehicle.
-            // Business rule: only ACTIVE vehicles are eligible for registration.
-            vehicle.activate();
-
-            // Tell the mock repository to return this vehicle when "car-1" is searched.
-            when(repo.findById(VehicleId.of("car-1"))).thenReturn(Optional.of(vehicle));
-
-            // ------------------- Act -------------------
-            // Ask the service if the vehicle is eligible for registration.
-            boolean result = service.isEligible("car-1");
-
-            // ------------------- Assert -------------------
-            // Since the vehicle is ACTIVE, eligibility should be true.
-            assertThat(result).isTrue();
-        }
-
-        @Test
-        void shouldReturnFalseWhenVehicleIsInactive() {
-
-            // ------------------- Arrange -------------------
-            // Create a sample vehicle.
-            // By default, a new vehicle starts as INACTIVE.
-            Vehicle vehicle = sampleVehicle();
-
-            // Tell the mock repository to return this inactive vehicle.
-            when(repo.findById(VehicleId.of("car-1"))).thenReturn(Optional.of(vehicle));
-
-            // ------------------- Act -------------------
-            // Ask the service if the vehicle is eligible for registration.
-            boolean result = service.isEligible("car-1");
-
-            // ------------------- Assert -------------------
-            // Since the vehicle is INACTIVE, eligibility should be false.
-            assertThat(result).isFalse();
-        }
-
-        @Test
-        void shouldThrowVehicleNotFoundExceptionWhenVehicleDoesNotExist() {
-
-            // ------------------- Arrange -------------------
-            // Tell the mock repository that no vehicle exists with this ID.
-            when(repo.findById(VehicleId.of("missing"))).thenReturn(Optional.empty());
-
-            // ------------------- Act + Assert -------------------
-            // Business rule:
-            // If the vehicle does not exist, eligibility cannot be checked.
-            // The service should throw VehicleNotFoundException.
-            assertThrows(VehicleNotFoundException.class,
-                    () -> service.isEligible("missing"));
-        }
-
-        // Helper method:
-        // Creates a reusable sample vehicle for the tests above.
-        // This avoids repeating the same object creation code in every test.
-        private Vehicle sampleVehicle() {
-            return new Vehicle(
-                    VehicleId.of("car-1"),
-                    new Vin("1HGCM82633A123456"),
-                    new VehicleSpecs("Toyota", "Corolla", 2020)
-            );
-        }
+        service = new PropertyEligibilityService(repo);
     }
+
+    private Property property(UUID id) {
+
+        return new Property(
+                PropertyId.of(id),
+                new PropertyTax(0.01),
+                new Address("123 Main Street")
+        );
+    }
+
+    @Test
+    @DisplayName("Should return true when property is available")
+    void shouldReturnTrueWhenPropertyIsAvailable() {
+
+        UUID id = UUID.randomUUID();
+
+        Property property = property(id);
+
+        when(repo.findById(PropertyId.of(id)))
+                .thenReturn(Optional.of(property));
+
+        boolean result = service.isEligible(id);
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("Should return false when property is unavailable")
+    void shouldReturnFalseWhenPropertyIsUnavailable() {
+
+        UUID id = UUID.randomUUID();
+
+        Property property = property(id);
+
+        property.rent();
+
+        when(repo.findById(PropertyId.of(id)))
+                .thenReturn(Optional.of(property));
+
+        boolean result = service.isEligible(id);
+
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should throw when property does not exist")
+    void shouldThrowWhenPropertyDoesNotExist() {
+
+        UUID id = UUID.randomUUID();
+
+        when(repo.findById(PropertyId.of(id)))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                PropertyNotFoundException.class,
+                () -> service.isEligible(id)
+        );
+    }
+}

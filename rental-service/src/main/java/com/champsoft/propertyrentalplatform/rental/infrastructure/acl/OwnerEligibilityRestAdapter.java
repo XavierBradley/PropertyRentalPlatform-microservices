@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
@@ -26,8 +27,7 @@ public class OwnerEligibilityRestAdapter implements OwnerEligibilityPort {
 
     @Override
     public boolean isEligible(UUID ownerId) {
-        String url = ownersBaseUrl + "api/owners/" + ownerId + "/eligibility";
-
+        String url = ownersBaseUrl + "/api/owners/" + ownerId + "/eligibility";
         try {
             Boolean result = restTemplate.getForObject(url, Boolean.class);
 
@@ -41,6 +41,9 @@ public class OwnerEligibilityRestAdapter implements OwnerEligibilityPort {
         }catch (ResourceAccessException ex) {
 
             throw new CrossContextValidationException("Owner service is unavailable");
+        }
+        catch (HttpServerErrorException ex) {
+            throw new CrossContextValidationException("Owner service error: " + ownerId);
         }
     }
 }
