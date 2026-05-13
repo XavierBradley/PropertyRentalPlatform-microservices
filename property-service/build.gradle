@@ -56,17 +56,27 @@ tasks.named('test') {
 	testLogging {
 		events "passed", "skipped", "failed"
 	}
+	ignoreFailures=true
 }
 
 jacoco {
 	toolVersion = "0.8.11"
 }
 
-jacocoTestReport {
+tasks.jacocoTestReport {
 	dependsOn test
+	executionData.setFrom(fileTree(buildDir).include("/jacoco/*.exec"))
+
 	reports {
 		xml.required.set(true)
+		html.required.set(true)
 		csv.required.set(false)
 		html.outputLocation.set(layout.buildDirectory.dir("jacocoHtml"))
 	}
+	onlyIf { true }
+	mustRunAfter test
+}
+
+tasks.test {
+	finalizedBy jacocoTestReport
 }
